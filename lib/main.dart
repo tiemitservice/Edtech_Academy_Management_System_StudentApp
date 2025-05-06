@@ -8,6 +8,8 @@ import 'homescreen.dart';
 import 'ALL Screen/login.dart'; 
 import 'ALL Screen/permission.dart';
 
+
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
@@ -24,10 +26,11 @@ class MyApp extends StatelessWidget {
       fallbackLocale: Locale('en'), 
       initialRoute: '/',
       getPages: [
-        GetPage(name: '/permission', page: () => LoginPage()),
+        GetPage(name: '/', page: () => LoginPage()),
         GetPage(name: '/home_page', page: () => HomeScreen()),
-        GetPage(name: '/', page: () => Permission()),
-        GetPage(name: '/student_score', page: () => StudentScoreScreen()),
+        GetPage(name: '/permission', page: () => Permission()),
+        GetPage(name: '/student_score', page: () => StudentScoreScreen(
+                studentData: Get.arguments as Map<String, dynamic>)),//student_score
         GetPage(name: '/attendent', page: () => AttendentScreen()), 
       ],
     );

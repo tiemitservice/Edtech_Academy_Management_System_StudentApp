@@ -77,6 +77,21 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  // Add the logo
+                  Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(
+                          20), // Adjust the radius for more/less rounding
+                      child: Image.asset(
+                        'assets/logo.png',
+                        height: 100,
+                        width: 100,
+                        fit: BoxFit.cover, // Adjust as needed
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20), 
+                 
                   Text(
                     'welcome'.tr,
                     style: TextStyle(
@@ -86,6 +101,8 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   SizedBox(height: 20),
+
+                  // Email Field
                   TextFormField(
                     controller: _emailController,
                     decoration: InputDecoration(
@@ -106,6 +123,8 @@ class _LoginPageState extends State<LoginPage> {
                     },
                   ),
                   SizedBox(height: 20),
+
+                  // Phone Number Field
                   TextFormField(
                     controller: _phoneNumberController,
                     decoration: InputDecoration(
@@ -127,6 +146,8 @@ class _LoginPageState extends State<LoginPage> {
                     },
                   ),
                   SizedBox(height: 20),
+
+                  // Submit Button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(

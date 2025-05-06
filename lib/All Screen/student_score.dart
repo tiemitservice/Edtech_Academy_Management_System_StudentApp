@@ -1,97 +1,141 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:get/get.dart';
 
-class StudentScoreScreen extends StatefulWidget {
-  @override
-  _StudentScoreScreenState createState() => _StudentScoreScreenState();
-}
+class StudentScoreScreen extends StatelessWidget {
+  final Map<String, dynamic> studentData;
 
-class _StudentScoreScreenState extends State<StudentScoreScreen> {
-  List<dynamic> students = [];
-  bool isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchStudentScores();
-  }
-
-  Future<void> fetchStudentScores() async {
-    final url = ''; //API URL=================================================
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        setState(() {
-          students = json.decode(response.body);
-          isLoading = false;
-        });
-      } else {
-        throw Exception('Failed to load student scores');
-      }
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      print('Error fetching student scores: $e');
-    }
-  }
+  const StudentScoreScreen({required this.studentData, Key? key})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final String displayName = Get.locale?.languageCode == 'en'
+        ? studentData['eng_name'] ?? 'N/A'
+        : studentData['kh_name'] ?? 'N/A';
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Student Scores'),
+        title: Text('My Scores'.tr),
         centerTitle: true,
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.blue[700],
+        elevation: 0, // Flat look for modern feel
       ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Container(
-              color: Colors.blue[50],
-              child: ListView.builder(
-                itemCount: students.length,
-                itemBuilder: (context, index) {
-                  final student = students[index];
-                  return Card(
-                    margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Name: ${student['name']}',
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.blue[50]!, Colors.blue[100]!],
+          ),
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Card(
+              elevation: 8,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header with Name
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Colors.blue[100],
+                          child: Icon(
+                            Icons.person,
+                            color: Colors.blue[700],
+                            size: 30,
+                          ),
+                          radius: 25,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            displayName,
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
+                              color: Colors.blue[900],
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Class: ${student['class']}',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Semester Score: ${student['semester_score']}',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          Text(
-                            'Classwork Score: ${student['classwork_score']}',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          Text(
-                            'Midterm Score: ${student['midterm_score']}',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  );
-                },
+                    const SizedBox(height: 24),
+
+                    // Score Section
+                    _buildInfoRow(
+                      icon: Icons.score,
+                      label: 'Score'.tr,
+                      value:
+                          studentData['score']?.toString() ?? 'Not available',
+                    ),
+                    const Divider(height: 24),
+
+                    // Attendance Section
+                    _buildInfoRow(
+                      icon: Icons.check_circle_outline,
+                      label: 'Attendance'.tr,
+                      value: studentData['attendance']?.toString() ??
+                          studentData['attendence']?.toString() ??
+                          'Not available',
+                    ),
+                  ],
+                ),
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          icon,
+          color: Colors.blue[700],
+          size: 28,
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[700],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue[900],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -15,6 +15,8 @@ class LangService extends Translations {
           'Student Score': 'Student Score',
           'Permission':'Permission',
           'Student_attendance': 'Student Attendance',
+          'Score':'Score',
+          'My Profile' : 'My Profile',
         },
         'km': {
           'title': 'សួស្តី',
@@ -28,6 +30,9 @@ class LangService extends Translations {
           'Student Score': 'ពិន្ទុសិស្ស',
           'Permission':'សុំំច្បាប់',
           'Student_attendance': 'វត្តមានសិស្ស',
+          'Score': 'ពិន្ទុ',
+          'My Profile' : 'ប្រវត្តិរូបរបស់ខ្ញុំ',
+
         },
       };
 }

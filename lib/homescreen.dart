@@ -1,6 +1,6 @@
+import 'package:edtechschool/All%20Screen/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'All Screen/login.dart';
 import 'All Screen/attendent.dart';
 import 'All Screen/permission.dart';
 import 'All Screen/student_score.dart';
@@ -19,23 +19,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        //title: Text('Ed Tech Acadamy'),
         centerTitle: true,
         backgroundColor: Colors.blue,
         actions: [
           PopupMenuButton<int>(
-            icon: Icon(Icons.more_vert),
+            icon: const Icon(Icons.more_vert),
             itemBuilder: (context) => [
-              // Language Change Option
               PopupMenuItem(
                 value: 1,
                 child: ListTile(
-                  leading: Icon(Icons.language),
+                  leading: const Icon(Icons.language),
                   title: Text('change_lang'.tr),
                   onTap: () {
-                    var locale = Get.locale == Locale('en')
-                        ? Locale('km')
-                        : Locale('en');
+                    var locale = Get.locale == const Locale('en')
+                        ? const Locale('km')
+                        : const Locale('en');
                     Get.updateLocale(locale);
                     Navigator.pop(context);
                   },
@@ -46,8 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: Container(
-        color: Colors.blue[50], // Light blue background
-        height: MediaQuery.of(context).size.height, // Ensure full height
+        color: Colors.blue[50],
+        height: MediaQuery.of(context).size.height,
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -66,10 +64,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-                // Card 1: Attendent
+                // Card 1: Attendance
                 GestureDetector(
                   onTap: () {
-                    Get.to(() => AttendentScreen());
+                    Get.to(() => AttendentScreen(), arguments: args);
                   },
                   child: Card(
                     color: Colors.blue,
@@ -81,12 +79,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.all(16.0),
                       child: Row(
                         children: [
-                          Icon(Icons.check_circle,
+                          const Icon(Icons.check_circle,
                               color: Colors.white, size: 40),
-                          SizedBox(width: 16),
+                          const SizedBox(width: 16),
                           Text(
                             'Attendance'.tr,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -97,12 +95,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
 
                 // Card 2: Student Score
                 GestureDetector(
                   onTap: () {
-                    Get.to(() => StudentScoreScreen());
+                    Get.to(() => StudentScoreScreen(studentData: args ?? {}));
                   },
                   child: Card(
                     color: Colors.blue,
@@ -114,11 +112,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.all(16.0),
                       child: Row(
                         children: [
-                          Icon(Icons.score, color: Colors.white, size: 40),
-                          SizedBox(width: 16),
+                          const Icon(Icons.score,
+                              color: Colors.white, size: 40),
+                          const SizedBox(width: 16),
                           Text(
                             'Student Score'.tr,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -129,12 +128,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
 
                 // Card 3: Permission
                 GestureDetector(
                   onTap: () {
-                    Get.to(() => Permission());
+                    Get.to(() => Permission(), arguments: args);
                   },
                   child: Card(
                     color: Colors.blue,
@@ -146,11 +145,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.all(16.0),
                       child: Row(
                         children: [
-                          Icon(Icons.assignment, color: Colors.white, size: 40),
-                          SizedBox(width: 16),
+                          const Icon(Icons.assignment,
+                              color: Colors.white, size: 40),
+                          const SizedBox(width: 16),
                           Text(
                             'Permission'.tr,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -161,18 +161,36 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-                // Card 4: Login
-                GestureDetector(
+               GestureDetector(
                   onTap: () {
-                    Get.to(() => LoginPage());
+                    Get.to(() => ProfilePage(studentData: args ?? {}));
                   },
                   child: Card(
                     color: Colors.blue,
                     elevation: 4,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.person,
+                              color: Colors.white,
+                              size: 40), // Changed to person icon
+                          const SizedBox(width: 16),
+                          Text(
+                            'My Profile'.tr,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
