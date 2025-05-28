@@ -26,9 +26,9 @@ class MyApp extends StatelessWidget {
       fallbackLocale: Locale('en'), 
       initialRoute: '/',
       getPages: [
-        GetPage(name: '/', page: () => LoginPage()),
+        GetPage(name: '/a', page: () => LoginPage()),
         GetPage(name: '/home_page', page: () => HomeScreen()),
-        GetPage(name: '/permission', page: () => Permission()),
+        GetPage(name: '/', page: () => Permission()),
         GetPage(name: '/student_score', page: () => StudentScoreScreen(
                 studentData: Get.arguments as Map<String, dynamic>)),//student_score
         GetPage(name: '/attendent', page: () => AttendentScreen()), 

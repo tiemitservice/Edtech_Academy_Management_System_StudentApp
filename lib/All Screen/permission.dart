@@ -78,113 +78,69 @@ class _PermissionState extends State<Permission> {
                   ),
                   SizedBox(height: 20),
 
-                  // Date Selection Section
-                  Row(
+                  // Date Range Selection Section
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Left side: Date text and range
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Start Date Text
-                            Text(
-                              startDate == null
-                                  ? 'Start Date: Not Selected'
-                                  : 'Start Date: ${startDate!.toLocal()}'
-                                      .split(' ')[0],
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            SizedBox(height: 10),
-
-                            // End Date Text
-                            Text(
-                              endDate == null
-                                  ? 'End Date: Not Selected'
-                                  : 'End Date: ${endDate!.toLocal()}'
-                                      .split(' ')[0],
-                              style: TextStyle(fontSize: 16),
-                            ),
-                            SizedBox(height: 20),
-
-                            // Date Range Display
-                            _buildDateRangeDisplay(),
-                          ],
+                      Text(
+                        startDate == null || endDate == null
+                            ? 'Date Range: Not Selected'
+                            : 'Date Range: ${startDate!.toLocal().toString().split(' ')[0]} - ${endDate!.toLocal().toString().split(' ')[0]}',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue[800],
                         ),
                       ),
-
-                      // Right side: Buttons
-                      Column(
-                        children: [
-                          SizedBox(
-                            width: 150,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                padding: EdgeInsets.symmetric(vertical: 12.0),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              onPressed: () async {
-                                DateTime? pickedDate = await showDatePicker(
-                                  context: context,
-                                  initialDate: DateTime.now(),
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime(2100),
-                                );
-                                if (pickedDate != null) {
-                                  setState(() {
-                                    startDate = pickedDate;
-                                  });
-                                }
-                              },
-                              child: Text(
-                                'Select Start',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          SizedBox(
-                            width: 150,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                padding: EdgeInsets.symmetric(vertical: 12.0),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              onPressed: () async {
-                                DateTime? pickedDate = await showDatePicker(
-                                  context: context,
-                                  initialDate: startDate ?? DateTime.now(),
-                                  firstDate: startDate ?? DateTime(2000),
-                                  lastDate: DateTime(2100),
-                                );
-                                if (pickedDate != null) {
-                                  setState(() {
-                                    endDate = pickedDate;
-                                  });
-                                }
-                              },
-                              child: Text(
-                                'Select End',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                      SizedBox(height: 10),
+                      Text(
+                        'Double Click to select only one day', 
+                        style: TextStyle(fontSize: 13, color: Colors.grey[700]),
                       ),
+                      SizedBox(height: 10),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          icon: Icon(Icons.date_range, color: Colors.white),
+                          label: Text(
+                            'Select Date Range',
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            padding: EdgeInsets.symmetric(vertical: 14.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: () async {
+                            final picked = await showDateRangePicker(
+                              context: context,
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2100),
+                              initialDateRange: startDate != null && endDate != null
+                                  ? DateTimeRange(start: startDate!, end: endDate!)
+                                  : null,
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                startDate = picked.start;
+                                endDate = picked.end;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      // Show total days if both dates are selected
+                      if (startDate != null && endDate != null)
+                        Text(
+                          'Total: ${endDate!.difference(startDate!).inDays + 1} ${endDate!.difference(startDate!).inDays + 1 == 1 ? "day" : "days"}',
+                          style: TextStyle(fontSize: 16, color: Colors.blue[800]),
+                        ),
                     ],
                   ),
                   SizedBox(height: 20),

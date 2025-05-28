@@ -15,6 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _phoneNumberController = TextEditingController();
   bool isLoading = false;
+  bool _obscurePassword = true;
 
   Future<bool> loginUser(String email, String phoneNumber) async {
     try {
@@ -61,14 +62,10 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: Text('Login'.tr),
-        centerTitle: true,
-      ),
+      
       body: Container(
         height: MediaQuery.of(context).size.height,
-        color: Colors.blue[50],
+        color: const Color.fromARGB(255, 255, 255, 255),
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -81,7 +78,7 @@ class _LoginPageState extends State<LoginPage> {
                   Center(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(
-                          20), // Adjust the radius for more/less rounding
+                          20), 
                       child: Image.asset(
                         'assets/logo.png',
                         height: 100,
@@ -93,7 +90,7 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(height: 20), 
                  
                   Text(
-                    'welcome'.tr,
+                    'Sign In',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -110,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      prefixIcon: Icon(Icons.email, color: Colors.blue),
+                      suffixIcon: Icon(Icons.email, color: Colors.blue), 
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -124,23 +121,33 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   SizedBox(height: 20),
 
-                  // Phone Number Field
+                  // Password Field
                   TextFormField(
                     controller: _phoneNumberController,
+                    obscureText: _obscurePassword,
                     decoration: InputDecoration(
-                      labelText: 'Phone Number'.tr,
+                      labelText: 'Password'.tr,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      prefixIcon: Icon(Icons.phone, color: Colors.blue),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          color: Colors.blue,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
                     ),
-                    keyboardType: TextInputType.phone,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your phone number'.tr;
+                        return 'Please enter your password'.tr;
                       }
-                      if (!RegExp(r'^0\d{8,9}$').hasMatch(value)) {
-                        return 'Please enter a valid phone number'.tr;
+                      if (value.length < 6) {
+                        return 'Password must be at least 6 characters'.tr;
                       }
                       return null;
                     },
