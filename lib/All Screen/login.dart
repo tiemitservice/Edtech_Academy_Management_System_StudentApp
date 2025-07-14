@@ -1,275 +1,204 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:get_storage/get_storage.dart';
+import '../controller/auth_controller.dart';
+import 'homescreen.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class LoginScreen extends StatelessWidget {
+  final box = GetStorage();
+  final AuthController authController = Get.put(AuthController());
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final RxBool isPasswordVisible = false.obs;
+  final RxBool rememberMe = false.obs;
+  
 
-  @override
-  _LoginPageState createState() => _LoginPageState();
-}
-
-class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _phoneNumberController = TextEditingController();
-  bool isLoading = false;
-  bool _obscurePassword = true;
-
-  Future<bool> loginUser(String email, String phoneNumber) async {
-    try {
-      final response = await http.get(
-        Uri.parse(
-            'https://edtech-academy-management-system-server.onrender.com/api/students'),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        // Handle different response formats
-        List<dynamic> students = [];
-        if (data is List) {
-          students = data;
-        } else if (data['students'] is List) {
-          students = data['students'];
-        } else if (data['data'] is List) {
-          students = data['data'];
-        }
-
-        debugPrint('Students data: $students'); // For debugging
-
-        return students.any((student) =>
-            student['email']?.toString().toLowerCase() == email.toLowerCase() &&
-            student['phoneNumber']?.toString() == phoneNumber);
-      } else {
-        debugPrint('API Error: ${response.statusCode} - ${response.body}');
-        throw Exception('Failed to load data: ${response.statusCode}');
-      }
-    } catch (e) {
-      debugPrint('Error during login: $e');
-      return false;
-    }
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _phoneNumberController.dispose();
-    super.dispose();
-  }
+  LoginScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
-      body: Container(
-        height: MediaQuery.of(context).size.height,
-        color: const Color.fromARGB(255, 255, 255, 255),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 60),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 40),
+              Center(
+                child: Column(
+                  children: [
+                    SvgPicture.asset(
+                      'assets/logoEn.svg',
+                      width: 130,
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      "Sign in",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
+
+              // Email TextField
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Email or Phone Number',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: const Color.fromARGB(255, 0, 0, 0),
+                  ),
+                ),
+              ),
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  hintText: emailController.text.isEmpty
+                      ? "Enter your email or phone number"
+                      : null,
+                  hintStyle: const TextStyle(
+                      color: Color.fromARGB(141, 112, 112, 112)),
+                  suffixIcon: const Icon(
+                    Icons.email,
+                    color: const Color.fromARGB(198, 33, 149, 243),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.blue),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.blue),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onChanged: (_) => {},
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 10),
+              // Password TextField
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Password',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: const Color.fromARGB(255, 0, 0, 0),
+                  ),
+                ),
+              ),
+              TextField(
+                controller: passwordController,
+                obscureText: !isPasswordVisible.value,
+                decoration: InputDecoration(
+                  hintText: passwordController.text.isEmpty
+                      ? "Enter your password"
+                      : null,
+                  hintStyle: const TextStyle(
+                    color: Color.fromARGB(141, 112, 112, 112),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      isPasswordVisible.value
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: const Color.fromARGB(198, 33, 149, 243),
+                    ),
+                    onPressed: () {
+                      isPasswordVisible.value = !isPasswordVisible.value;
+                    },
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.blue),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.blue),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _handleLogin(context),
+              ),
+              const SizedBox(height: 10),
+
+              // Remember me & Forgot password
+              Row(
                 children: [
-                  // Add the logo
-                  Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(
-                          20), 
-                      child: Image.asset(
-                        'assets/logo.png',
-                        height: 100,
-                        width: 100,
-                        fit: BoxFit.cover, // Adjust as needed
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 20), 
-                 
-                  Text(
-                    'Sign In',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue[800],
-                    ),
-                  ),
-                  SizedBox(height: 20),
-
-                  // Email Field
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      labelText: 'email'.tr,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      suffixIcon: Icon(Icons.email, color: Colors.blue), 
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email'.tr;
-                      }
-                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                        return 'Please enter a valid email'.tr;
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 20),
-
-                  // Password Field
-                  TextFormField(
-                    controller: _phoneNumberController,
-                    obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      labelText: 'Password'.tr,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                          color: Colors.blue,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
+                  Obx(() => Checkbox(
+                        value: rememberMe.value,
+                        activeColor:
+                            Colors.blue, // Change the check color to blue
+                        checkColor: Colors.white,
+                        onChanged: (value) {
+                          rememberMe.value = value ?? false;
                         },
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password'.tr;
-                      }
-                      if (value.length < 6) {
-                        return 'Password must be at least 6 characters'.tr;
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 20),
-
-                  // Submit Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        padding: EdgeInsets.symmetric(vertical: 16.0),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      onPressed: isLoading
-                          ? null
-                          : () async {
-                              if (_formKey.currentState!.validate()) {
-                                setState(() => isLoading = true);
-
-                                try {
-                                  final email = _emailController.text.trim();
-                                  final phoneNumber =
-                                      _phoneNumberController.text.trim();
-
-                                  // 1. First verify login credentials
-                                  final loginSuccess =
-                                      await loginUser(email, phoneNumber);
-
-                                  if (!loginSuccess) {
-                                    Get.snackbar(
-                                      'Error'.tr,
-                                      'Invalid email or phone number'.tr,
-                                      backgroundColor: Colors.red,
-                                      colorText: Colors.white,
-                                    );
-                                    return;
-                                  }
-
-                                  // 2. If login successful, fetch fresh student data
-                                  final response = await http.get(
-                                    Uri.parse(
-                                        'https://edtech-academy-management-system-server.onrender.com/api/students'),
-                                  );
-
-                                  if (response.statusCode != 200) {
-                                    throw Exception(
-                                        'Failed to fetch student data');
-                                  }
-
-                                  final data = jsonDecode(response.body);
-                                  List<dynamic> students = [];
-
-                                  // Handle different API response formats
-                                  if (data is List) {
-                                    students = data;
-                                  } else if (data['students'] is List) {
-                                    students = data['students'];
-                                  } else if (data['data'] is List) {
-                                    students = data['data'];
-                                  }
-
-                                  // 3. Find the matching student with null safety
-                                  final studentData = students.firstWhere(
-                                    (student) =>
-                                        student['email']
-                                                ?.toString()
-                                                .toLowerCase() ==
-                                            email.toLowerCase() &&
-                                        student['phoneNumber']?.toString() ==
-                                            phoneNumber,
-                                    orElse: () => throw Exception(
-                                        'Student not found after successful login'),
-                                  );
-
-                                  // 4. Navigate to home page with student data
-                                  Get.offAllNamed('/home_page',
-                                      arguments: studentData);
-                                } on http.ClientException catch (e) {
-                                  Get.snackbar(
-                                    'Network Error'.tr,
-                                    'Please check your internet connection'.tr,
-                                    backgroundColor: Colors.red,
-                                    colorText: Colors.white,
-                                  );
-                                  debugPrint('Network error: $e');
-                                } catch (e) {
-                                  Get.snackbar(
-                                    'Error'.tr,
-                                    'An error occurred. Please try again.'.tr,
-                                    backgroundColor: Colors.red,
-                                    colorText: Colors.white,
-                                  );
-                                  debugPrint('Login error: $e');
-                                } finally {
-                                  if (mounted) {
-                                    setState(() => isLoading = false);
-                                  }
-                                }
-                              }
-                            },
-                      child: isLoading
-                          ? CircularProgressIndicator(color: Colors.white)
-                          : Text(
-                              'submit'.tr,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                    ),
-                  ),
+                      )),
+                  const Text("Remember Me"),
+                  
                 ],
               ),
-            ),
+              const SizedBox(height: 20),
+
+              // Sign In Button
+              Obx(() => authController.isLoading.value
+                  ? const CircularProgressIndicator()
+                  : SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: () => _handleLogin(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                        child: const Text(
+                          "Sign in",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    )),
+            ],
           ),
         ),
       ),
     );
+  }
+
+  void _handleLogin(BuildContext context) async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter both email and password')),
+      );
+      return;
+    }
+
+    final success = await authController.login(email, password);
+
+    if (success) {
+      box.write('userEmail', email);
+      Get.off(() => HomeScreen(email: email));
+    } else {
+      emailController.clear();
+      passwordController.clear();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid email or password')),
+      );
+    }
   }
 }

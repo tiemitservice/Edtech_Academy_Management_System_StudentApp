@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "D:/Year4/edtechschool/linux"
+    "cmake.sourceDirectory": "D:/Year4/edtechschool/linux",
+    "java.configuration.updateBuildConfiguration": "automatic"
 }

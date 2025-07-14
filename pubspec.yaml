@@ -12,9 +12,16 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   get_storage: ^2.1.1
-  get: ^4.6.6
+  get: ^4.7.2
   intl: any
-  http: ^0.13.5
+  flutter_svg: ^2.0.7
+  http: ^1.2.2
+  shared_preferences: ^2.5.3
+  socket_io_client: ^3.1.2
+  flutter_secure_storage: ^9.2.4
+  
+
+
 
 dev_dependencies:
   flutter_test:
@@ -25,4 +32,15 @@ flutter:
   uses-material-design: true
   generate: true
   assets:
-    - assets/logo.png
+
+    - assets/bigLogoEn.svg
+    - assets/bigLogoKh.svg
+    - assets/logoKh.svg
+    - assets/logoEn.svg
+    - assets/profile.jpg
+    - assets/tiem_logo.svg
+    - assets/Group.svg
+    - assets/data/commune.json
+    - assets/data/district.json
+    - assets/data/province.json
+    - assets/data/village.json
