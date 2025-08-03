@@ -12,7 +12,6 @@ class LoginScreen extends StatelessWidget {
   final TextEditingController passwordController = TextEditingController();
   final RxBool isPasswordVisible = false.obs;
   final RxBool rememberMe = false.obs;
-  
 
   LoginScreen({super.key});
 
@@ -47,13 +46,13 @@ class LoginScreen extends StatelessWidget {
               const SizedBox(height: 40),
 
               // Email TextField
-              Align(
+              const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Email or Phone Number',
                   style: TextStyle(
                     fontSize: 16,
-                    color: const Color.fromARGB(255, 0, 0, 0),
+                    color: Color.fromARGB(255, 0, 0, 0),
                   ),
                 ),
               ),
@@ -67,7 +66,7 @@ class LoginScreen extends StatelessWidget {
                       color: Color.fromARGB(141, 112, 112, 112)),
                   suffixIcon: const Icon(
                     Icons.email,
-                    color: const Color.fromARGB(198, 33, 149, 243),
+                    color: Color.fromARGB(198, 33, 149, 243),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderSide: const BorderSide(color: Colors.blue),
@@ -83,69 +82,53 @@ class LoginScreen extends StatelessWidget {
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 10),
+
               // Password TextField
-              Align(
+              const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Password',
                   style: TextStyle(
                     fontSize: 16,
-                    color: const Color.fromARGB(255, 0, 0, 0),
+                    color: Color.fromARGB(255, 0, 0, 0),
                   ),
                 ),
               ),
-              TextField(
-                controller: passwordController,
-                obscureText: !isPasswordVisible.value,
-                decoration: InputDecoration(
-                  hintText: passwordController.text.isEmpty
-                      ? "Enter your password"
-                      : null,
-                  hintStyle: const TextStyle(
-                    color: Color.fromARGB(141, 112, 112, 112),
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      isPasswordVisible.value
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                      color: const Color.fromARGB(198, 33, 149, 243),
-                    ),
-                    onPressed: () {
-                      isPasswordVisible.value = !isPasswordVisible.value;
-                    },
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Colors.blue),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Colors.blue),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _handleLogin(context),
-              ),
-              const SizedBox(height: 10),
-
-              // Remember me & Forgot password
-              Row(
-                children: [
-                  Obx(() => Checkbox(
-                        value: rememberMe.value,
-                        activeColor:
-                            Colors.blue, // Change the check color to blue
-                        checkColor: Colors.white,
-                        onChanged: (value) {
-                          rememberMe.value = value ?? false;
+              // Wrap the TextField with Obx to make it reactive
+              Obx(() => TextField(
+                    controller: passwordController,
+                    obscureText: !isPasswordVisible.value,
+                    decoration: InputDecoration(
+                      hintText: passwordController.text.isEmpty
+                          ? "Enter your password"
+                          : null,
+                      hintStyle: const TextStyle(
+                        color: Color.fromARGB(141, 112, 112, 112),
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          isPasswordVisible.value
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: const Color.fromARGB(198, 33, 149, 243),
+                        ),
+                        onPressed: () {
+                          isPasswordVisible.value = !isPasswordVisible.value;
                         },
-                      )),
-                  const Text("Remember Me"),
-                  
-                ],
-              ),
-              const SizedBox(height: 20),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.blue),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(color: Colors.blue),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _handleLogin(context),
+                  )),
+              const SizedBox(height: 10),
 
               // Sign In Button
               Obx(() => authController.isLoading.value

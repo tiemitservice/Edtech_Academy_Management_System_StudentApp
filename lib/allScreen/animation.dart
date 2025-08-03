@@ -1,5 +1,5 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
@@ -28,12 +28,29 @@ class _SplashAnimationState extends State<SplashAnimation>
       CurvedAnimation(parent: _controller, curve: Curves.easeIn),
     );
 
-    _controller.forward();
-
-    // Navigate to login screen after 2 seconds
-    Timer(const Duration(seconds: 3), () {
-      Get.offNamed('/');
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _checkAuthAndNavigate();
+      }
     });
+
+    _controller.forward();
+  }
+
+  // This is where the token is read from storage
+  Future<void> _checkAuthAndNavigate() async {
+    const storage = FlutterSecureStorage();
+    final token = await storage.read(key: 'authToken');
+
+    if (!mounted) return;
+
+    if (token != null) {
+      // If token exists, go to home
+      Get.offNamed('/home_page');
+    } else {
+      // If no token, go to login
+      Get.offNamed('/');
+    }
   }
 
   @override
@@ -51,14 +68,12 @@ class _SplashAnimationState extends State<SplashAnimation>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(
-                height: 350,
-              ),
+              const Spacer(flex: 2),
               SvgPicture.asset(
-                'assets/logoEn.svg',
+                'assets/logoEn.svg', // Make sure this asset exists
                 height: 158,
               ),
-              const SizedBox(height: 150),
+              const SizedBox(height: 130),
               const Text(
                 'FOR PARENTS',
                 style: TextStyle(
@@ -67,7 +82,7 @@ class _SplashAnimationState extends State<SplashAnimation>
                   color: Color.fromRGBO(20, 105, 199, 1.0),
                 ),
               ),
-              const Spacer(),
+              const Spacer(flex: 1),
               Padding(
                 padding: const EdgeInsets.only(bottom: 30),
                 child: Column(
@@ -76,7 +91,7 @@ class _SplashAnimationState extends State<SplashAnimation>
                         style: TextStyle(
                             color: Color.fromARGB(255, 108, 108, 108))),
                     SvgPicture.asset(
-                      'assets/tiem_logo.svg',
+                      'assets/tiem_logo.svg', // Make sure this asset exists
                       height: 27,
                       width: 70,
                     ),

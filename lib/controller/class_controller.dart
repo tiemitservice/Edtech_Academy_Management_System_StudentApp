@@ -8,11 +8,8 @@ class ClassController extends GetxController {
   var classes = <ClassModel>[].obs;
   var isLoading = false.obs;
 
-  get classList => null;
-
- Future<void> fetchClassesByEmail(String email) async {
+  Future<void> fetchClassesByEmail(String email) async {
     if (email.isEmpty) {
-      // Try getting email from AuthController if it's not passed properly
       final fallbackEmail = Get.find<AuthController>().userEmail.value;
       if (fallbackEmail.isEmpty) {
         print('❌ Email is empty! Cannot fetch classes.');
@@ -32,5 +29,4 @@ class ClassController extends GetxController {
       isLoading.value = false;
     }
   }
-
 }

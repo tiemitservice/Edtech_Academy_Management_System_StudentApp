@@ -6,7 +6,7 @@ import '../model/feedback_model.dart';
 class FeedbackService {
   
   static const String apiUrl =
-            'https://edtech-academy-management-system-server.onrender.com/api/feedbacks'; 
+            'http://188.166.242.109:5000/api/feedbacks'; 
    static Future<void> sendFeedback(FeedbackModel feedback) async {
     final response = await http.post(
       Uri.parse(apiUrl),

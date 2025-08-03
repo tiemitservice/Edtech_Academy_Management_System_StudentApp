@@ -4,12 +4,14 @@ class ClassModel {
   final String name;
   final List<StudentRecord> students;
   final String staff;
+  final bool markAsCompleted;
 
   ClassModel({
     required this.id,
     required this.name,
     required this.students,
     required this.staff,
+    this.markAsCompleted = false,
 
   });
 
@@ -21,6 +23,7 @@ class ClassModel {
           .map((e) => StudentRecord.fromJson(e))
           .toList(),
       staff: json['staff'] ?? '',
+       markAsCompleted: json['mark_as_completed'] ?? false,
     );
   }
 int get totalStudent => students.length;
@@ -35,17 +38,35 @@ class StudentRecord {
   final Student student;
   final String comment;
   final String? totalScore;
+  final int score;
+  final int attendance;
+  final int totalAttendanceScore;
+  final int finalScore;
+  final int midtermScore;
+  final int quizScore;
 
   StudentRecord({
     required this.student,
     required this.comment,
     this.totalScore,
+    this.score = 0,
+    this.attendance = 0,
+    this.totalAttendanceScore = 0,
+    this.finalScore = 0,
+    this.midtermScore = 0,
+    this.quizScore = 0,
   });
 
   factory StudentRecord.fromJson(Map<String, dynamic> json) {
     return StudentRecord(
       student: Student.fromJson(json['student']),
       comment: json['comments'] ?? '',
+      score: json['score'] ?? 0,
+      attendance: json['attendence'] ?? 0,
+      totalAttendanceScore: json['total_attendance_score'] ?? 0,
+      finalScore: json['final_score'] ?? 0,
+      midtermScore: json['midterm_score'] ?? 0,
+      quizScore: json['quiz_score'] ?? 0,
     );
   }
 

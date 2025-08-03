@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../controller/student_controller.dart';
 import '../service/address_service.dart';
+
 class ProfilePage extends StatelessWidget {
   final String email;
   final StudentController controller;
@@ -31,7 +32,7 @@ class ProfilePage extends StatelessWidget {
         }
 
         if (controller.student.value == null) {
-          return const Center(child: Text("No student data available"));
+          return Center(child: Text("noStudentData".tr));
         }
 
         final student = controller.student.value!;
@@ -44,7 +45,7 @@ class ProfilePage extends StatelessWidget {
             }
 
             if (snapshot.hasError) {
-              return const Center(child: Text("Error loading address data"));
+              return Center(child: Text("errorLoadingAddress".tr));
             }
 
             // Student Address
@@ -57,7 +58,7 @@ class ProfilePage extends StatelessWidget {
             final village =
                 addressService.getVillageName(student.village ?? '');
             final formattedAddress =
-                '${village} Village, ${commune} Commune, ${district} District, ${province} Province';
+                '${village}${'villageLabel'.tr}, ${commune}${'communeLabel'.tr}, ${district}${'districtLabel'.tr}, ${province}${'provinceLabel'.tr}';
 
             // --- NEW: Family Address ---
             final familyProvince = addressService
@@ -69,7 +70,7 @@ class ProfilePage extends StatelessWidget {
             final familyVillage = addressService
                 .getFamilyVillageName(student.familyVillage ?? '');
             final formattedFamilyAddress =
-                '${familyVillage} Village, ${familyCommune} Commune, ${familyDistrict} District, ${familyProvince} Province';
+                '${familyVillage}${'villageLabel'.tr}, ${familyCommune}${'communeLabel'.tr}, ${familyDistrict}${'districtLabel'.tr}, ${familyProvince}${'provinceLabel'.tr}';
 
             return SingleChildScrollView(
               child: Padding(
@@ -84,9 +85,9 @@ class ProfilePage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        const Text(
-                          "Profile",
-                          style: TextStyle(
+                        Text(
+                          "profileTitle".tr,
+                          style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
                             color: Colors.blueAccent,
@@ -143,21 +144,22 @@ class ProfilePage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        _buildInfoRow(Icons.person, "Gender", student.gender),
                         _buildInfoRow(
-                            Icons.phone, "Phone", student.phoneNumber),
-                        _buildInfoRow(Icons.home, "Address", formattedAddress),
-                        _buildInfoRow(Icons.email, "Email",
-                            student.email ?? 'Not provided'),
+                            Icons.person, "gender".tr, student.gender),
+                        _buildInfoRow(
+                            Icons.phone, "phone".tr, student.phoneNumber),
+                        _buildInfoRow(
+                            Icons.home, "address".tr, formattedAddress),
+                        _buildInfoRow(Icons.email, "email".tr,
+                            student.email ?? 'notProvided'.tr),
                         const SizedBox(height: 16),
                         const Divider(),
                         const SizedBox(height: 8),
-                        _buildInfoRow(Icons.man, "Father's Name",
+                        _buildInfoRow(Icons.man, "fatherName".tr,
                             student.fatherName ?? 'N/A'),
-                        _buildInfoRow(Icons.woman, "Mother's Name",
+                        _buildInfoRow(Icons.woman, "motherName".tr,
                             student.motherName ?? 'N/A'),
-                        // --- UPDATED: Display Formatted Family Address ---
-                        _buildInfoRow(Icons.location_city, "Family Address",
+                        _buildInfoRow(Icons.location_city, "familyAddress".tr,
                             formattedFamilyAddress),
                       ],
                     ),

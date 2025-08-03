@@ -21,16 +21,37 @@ class PermissionController extends GetxController {
   var studentEmail = ''.obs;
   var permissions = [].obs;
   var email = ''.obs;
+  var availableClasses = <ClassModel>[].obs;
+  var selectedStaff = ''.obs;
+  var selectedClassName = ''.obs; 
+
+ void setSelectedClass(String className) {
+
+    final selected = availableClasses.firstWhereOrNull(
+      (c) => c.name == className && c.markAsCompleted == true,
+    );
+
+    if (selected != null) {
+      selectedClassName.value = selected.name;
+      staff.value = selected.staff;
+      print("🔄 Class selected: ${selected.name}, Staff: ${selected.staff}");
+    } else {
+      // If not found or inactive class, clear selection
+      selectedClassName.value = '';
+      staff.value = '';
+      print("⚠️ No active class found for selected class name: $className");
+    }
+  }
 
   final String studentApiUrl =
-      'https://edtech-academy-management-system-server.onrender.com/api/students';
+      'http://188.166.242.109:5000/api/students';
   final String permissionApiUrl =
-      'https://edtech-academy-management-system-server.onrender.com/api/student_permissions';
+      'http://188.166.242.109:5000/api/student_permissions';
 
 Future<void> fetchStudentByEmail(String email) async {
     final auth = Get.find<AuthController>();
     final userEmail = auth.userEmail.value.trim();
-
+    
     if (userEmail.isEmpty) {
       Get.snackbar("Error", "Email not found. Please log in again.",
           backgroundColor: Colors.red, colorText: Colors.white);
@@ -70,9 +91,9 @@ Future<void> fetchStudentByEmail(String email) async {
 
       print("✅ Student ID: ${studentId.value}");
 
-      // Step 2: Get class list and use ClassModel
+      // Step 2: Get class list
       final classRes = await http.get(Uri.parse(
-          'https://edtech-academy-management-system-server.onrender.com/api/classes'));
+          'http://188.166.242.109:5000/api/classes'));
 
       if (classRes.statusCode != 200) {
         Get.snackbar("Error", "Failed to load classes",
@@ -82,21 +103,26 @@ Future<void> fetchStudentByEmail(String email) async {
 
       final List classList = json.decode(classRes.body)['data'] ?? [];
 
+      availableClasses.clear();
+
       for (var classJson in classList) {
         final classModel = ClassModel.fromJson(classJson);
-
-        for (var studentRecord in classModel.students) {
-          if (studentRecord.student.id == studentId.value) {
-            staff.value = classModel.staff;
-            print("🎯 Found staff ID from ClassModel: ${staff.value}");
-            return;
-          }
+        final isInClass = classModel.students.any(
+          (studentRecord) => studentRecord.student.id == studentId.value,
+        );
+        if (isInClass) {
+          availableClasses.add(classModel);
         }
       }
 
-      print(
-          "⚠️ Staff not found in any class containing student ID: ${studentId.value}");
-      staff.value = '';
+      if (availableClasses.isNotEmpty) {
+        print(
+            "🎯 Available classes: ${availableClasses.map((e) => e.name).toList()}");
+        print("✅ Default staff: ${staff.value}");
+      } else {
+        print("⚠️ No classes found for student: ${studentId.value}");
+        staff.value = '';
+      }
     } catch (e) {
       Get.snackbar("Error", "Exception occurred: $e",
           backgroundColor: Colors.red, colorText: Colors.white);
@@ -246,3 +272,5 @@ Future<void> fetchStudentByEmail(String email) async {
     super.onClose();
   }
 }
+
+

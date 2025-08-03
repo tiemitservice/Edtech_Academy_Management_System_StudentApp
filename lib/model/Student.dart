@@ -1,7 +1,7 @@
 class Student {
   final String id;
   final String khName;
-  final String engName;
+  late final String engName;
   final String gender;
   final String phoneNumber;
   final String? email;

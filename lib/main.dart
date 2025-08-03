@@ -1,22 +1,24 @@
-import 'package:edtechschool/All%20Screen/attendent.dart';
+import 'package:edtechschool/allScreen/attendent.dart';
 import 'package:edtechschool/controller/auth_controller.dart';
 import 'package:edtechschool/controller/class_controller.dart';
+import 'package:edtechschool/controller/language_controller.dart'; // Import Language Controller
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'All Screen/History_permission.dart';
-import 'All Screen/animation.dart';
-import 'All Screen/feedback_page.dart';
-import 'All Screen/forgetpass.dart';
-import 'All Screen/login.dart';
-import 'All Screen/permission.dart';
-import 'All Screen/permission_status.dart';
-import 'All Screen/profile_page.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'allScreen/History_permission.dart';
+import 'allScreen/animation.dart';
+import 'allScreen/feedback_page.dart';
+import 'allScreen/forgetpass.dart';
+import 'allScreen/login.dart';
+import 'allScreen/permission.dart';
+import 'allScreen/permission_status.dart';
+import 'allScreen/profile_page.dart';
 import 'controller/permission_controller.dart';
 import 'controller/student_controller.dart';
 import 'service/lang_service.dart';
 import 'package:get_storage/get_storage.dart';
-import 'All Screen/homescreen.dart';
-import '../All Screen/class.dart';
+import 'allScreen/homescreen.dart';
+import 'allScreen/class.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +28,8 @@ Future<void> main() async {
   Get.put(StudentController(GetStorage().read('userEmail') ?? ''));
   Get.put(PermissionController());
   Get.put(ClassController());
- 
+  Get.put(LanguageController()); // Add the language controller**
+
   runApp(MyApp());
 }
 
@@ -34,10 +37,20 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        // Set the default font family for the entire app
+        textTheme: GoogleFonts.suwannaphumTextTheme(
+          Theme.of(context).textTheme,
+        ),
+      ),
       debugShowCheckedModeBanner: false,
       translations: LangService(),
-      locale: Locale('en'),
-      fallbackLocale: Locale('en'),
+      // Read the saved language. Default to English ('en') if nothing is saved.
+      locale: GetStorage().read('isEnglish') ?? true
+          ? const Locale('en')
+          : const Locale('km'),
+      fallbackLocale: const Locale('en'),
       initialRoute: '/splash',
       getPages: [
         GetPage(name: '/', page: () => LoginScreen()),
@@ -45,7 +58,9 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/attendent', page: () => AttendentScreen()),
         GetPage(name: '/forgetpassword', page: () => ForgetPassword()),
         GetPage(name: '/history_permission', page: () => HistoryPermission()),
-        GetPage(name: '/permission_status',page: () => const Permission_Status(),
+        GetPage(
+          name: '/permission_status',
+          page: () => const Permission_Status(email: '',),
         ),
         //page have connection with email
         GetPage(

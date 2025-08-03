@@ -5,7 +5,7 @@ import '../model/permission_model.dart';
 
 class PermissionService {
   static const String _url =
-      'https://edtech-academy-management-system-server.onrender.com/api/student_permissions';
+      'http://188.166.242.109:5000/api/student_permissions';
 
   static Future<bool> submitPermission(PermissionModel data) async {
     try {

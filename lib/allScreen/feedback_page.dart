@@ -24,7 +24,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Feedback"),
+        title: Text("feedbackTitle".tr),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -35,7 +35,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         }
 
         if (controller.student.value == null) {
-          return const Center(child: Text("Student not found."));
+          return Center(child: Text("studentNotFound".tr));
         }
 
         final student = controller.student.value!;
@@ -53,7 +53,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   border: Border.all(color: Colors.blue.shade200),
                 ),
                 child: Text(
-                  "Thank you for your feedback To Us!",
+                  "feedbackGreeting".tr,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -68,7 +68,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 controller: controller.feedbackTextController,
                 maxLines: 5,
                 decoration: InputDecoration(
-                  labelText: "Write feedback here...",
+                  labelText: "feedbackHint".tr,
                   labelStyle: const TextStyle(color: Colors.blue),
                   focusedBorder: OutlineInputBorder(
                     borderSide: const BorderSide(color: Colors.blue),
@@ -98,7 +98,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     ),
                   ),
                   icon: const Icon(Icons.send),
-                  label: const Text("Submit Feedback"),
+                  label: Text("submitFeedback".tr),
                 ),
               )
             ],

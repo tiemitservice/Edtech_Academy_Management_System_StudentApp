@@ -1,4 +1,4 @@
-import 'package:edtechschool/All%20Screen/login.dart';
+import 'package:edtechschool/allScreen/login.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 

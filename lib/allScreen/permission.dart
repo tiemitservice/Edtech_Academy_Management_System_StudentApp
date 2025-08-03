@@ -4,8 +4,6 @@ import 'package:intl/intl.dart';
 
 import '../controller/permission_controller.dart';
 
-final permissionController = Get.find<PermissionController>();
-
 class Permission extends StatefulWidget {
   final String email;
   const Permission({Key? key, required this.email}) : super(key: key);
@@ -14,7 +12,6 @@ class Permission extends StatefulWidget {
   _PermissionState createState() => _PermissionState();
 }
 
-//
 class _PermissionState extends State<Permission> {
   final _formKey = GlobalKey<FormState>();
 
@@ -30,7 +27,6 @@ class _PermissionState extends State<Permission> {
     permissionController.fetchStudentByEmail(email);
     permissionController.reasonController.text = '';
     permissionController.fetchStudentPermissions();
-    //permissionController.fetchPermissionsByEmail(authController.userEmail.value);
   }
 
   String formatWithWeekday(DateTime date) {
@@ -45,11 +41,12 @@ class _PermissionState extends State<Permission> {
         backgroundColor: Colors.blue,
         elevation: 0,
         centerTitle: true,
-        title: Text('Add Permission', style: TextStyle(color: Colors.white)),
+        title: Text('addPermissionTitle'.tr,
+            style: const TextStyle(color: Colors.white)),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () =>
-              Get.offAllNamed('/home_page', arguments: widget.email),
+              Get.offAllNamed('/home_page', arguments: {'email': widget.email}),
         ),
       ),
       body: SingleChildScrollView(
@@ -57,7 +54,7 @@ class _PermissionState extends State<Permission> {
         child: Form(
           key: _formKey,
           child: Container(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -65,25 +62,88 @@ class _PermissionState extends State<Permission> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 10),
-                RichText(
-                  text: TextSpan(
-                    text: '📅 Choose Date ',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
+                Obx(() {
+                  // Filter for active classes first
+                  final activeClasses = permissionController.availableClasses
+                      .where((classModel) => classModel.markAsCompleted == true)
+                      .toList();
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextSpan(
-                        text: '*',
-                        style: TextStyle(
-                            color: Colors.red, fontWeight: FontWeight.bold),
+                      Text(
+                        'selectClassLabel'.tr,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
+                      const SizedBox(height: 10),
+                      // Check if there are active classes before building the dropdown
+                      if (activeClasses.isEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'noActiveClasses'.tr, // New translation key
+                              style: TextStyle(color: Colors.grey.shade700),
+                            ),
+                          ),
+                        )
+                      else
+                        DropdownButtonFormField<String>(
+                          value: permissionController
+                                  .selectedClassName.value.isEmpty
+                              ? null
+                              : permissionController.selectedClassName.value,
+                          hint: Text('selectClassHint'.tr),
+                          items: activeClasses.map((classModel) {
+                            return DropdownMenuItem<String>(
+                              value: classModel.name,
+                              child: Text(classModel.name),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              permissionController.setSelectedClass(value);
+                            }
+                          },
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.grey.shade100,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.blue),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: Colors.blue),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                  color: Colors.blue, width: 2),
+                            ),
+                          ),
+                          validator: (value) =>
+                              value == null ? 'selectClassValidator'.tr : null,
+                        ),
+                      const SizedBox(height: 20),
                     ],
+                  );
+                }),
+                const SizedBox(height: 10),
+                Text(
+                  'chooseDateLabel'.tr,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
                   ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 GestureDetector(
                   onTap: () async {
                     final DateTime today = DateTime.now();
@@ -99,16 +159,16 @@ class _PermissionState extends State<Permission> {
                       setState(() {
                         startDate = picked.start;
                         endDate = picked.end;
-                        // Update the controller as well
                         permissionController.startDate = picked.start;
                         permissionController.endDate = picked.end;
                       });
                     }
                   },
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 16),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.blue), // Blue outline
+                      border: Border.all(color: Colors.blue),
                       borderRadius: BorderRadius.circular(12),
                       color: Colors.grey.shade100,
                     ),
@@ -121,7 +181,7 @@ class _PermissionState extends State<Permission> {
                             children: [
                               Text(
                                 startDate == null || endDate == null
-                                    ? 'Choose date'
+                                    ? 'chooseDateHint'.tr
                                     : formatWithWeekday(startDate!),
                                 style: TextStyle(
                                   fontSize: 16,
@@ -132,8 +192,8 @@ class _PermissionState extends State<Permission> {
                               ),
                               if (startDate != null && endDate != null)
                                 Text(
-                                  'to\n${formatWithWeekday(endDate!)}',
-                                  style: TextStyle(
+                                  '${'dateTo'.tr}\n${formatWithWeekday(endDate!)}',
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     color: Colors.black,
                                   ),
@@ -141,77 +201,59 @@ class _PermissionState extends State<Permission> {
                             ],
                           ),
                         ),
-                        Icon(Icons.date_range,
-                            color: Colors.blue), // Icon on the right
+                        const Icon(Icons.date_range, color: Colors.blue),
                       ],
                     ),
                   ),
                 ),
-                SizedBox(height: 25),
-
-                // Reason Field
-                RichText(
-                  text: TextSpan(
-                    text: '📝Reason ',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: '*',
-                        style: TextStyle(
-                            color: Colors.red, fontWeight: FontWeight.bold),
-                      ),
-                    ],
+                const SizedBox(height: 25),
+                Text(
+                  'reasonLabelWithEmoji'.tr,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
                   ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 TextFormField(
                   controller: permissionController.reasonController,
                   maxLines: 4,
                   decoration: InputDecoration(
-                    hintText: 'Ex: Sick leave, Personal reasons',
+                    hintText: 'reasonHint'.tr,
                     filled: true,
                     fillColor: Colors.grey.shade100,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    // No icon for reason field
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          BorderSide(color: Colors.blue), // Blue outline
+                      borderSide: const BorderSide(color: Colors.blue),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                          color: Colors.blue, width: 2), // Blue outline
+                      borderSide:
+                          const BorderSide(color: Colors.blue, width: 2),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          BorderSide(color: Colors.blue), // Blue outline
+                      borderSide: const BorderSide(color: Colors.blue),
                     ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter the reason';
+                      return 'reasonValidator'.tr;
                     }
                     return null;
                   },
                 ),
-                SizedBox(height: 30),
-
+                const SizedBox(height: 30),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
-                        side: BorderSide(
-                          color: Colors.blue, // Blue outline
-                        ),
+                        side: const BorderSide(color: Colors.blue),
                       ),
                     ),
                     onPressed: () async {
@@ -220,7 +262,7 @@ class _PermissionState extends State<Permission> {
                             permissionController.endDate == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Please select a valid date range'),
+                              content: Text('invalidDateRangeError'.tr),
                               backgroundColor: Colors.red,
                             ),
                           );
@@ -228,14 +270,12 @@ class _PermissionState extends State<Permission> {
                             .isBefore(permissionController.startDate!)) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content:
-                                  Text('End date must be after start date'),
+                              content: Text('endDateError'.tr),
                               backgroundColor: Colors.red,
                             ),
                           );
                         } else {
                           await permissionController.submitPermission();
-
                           permissionController.reasonController.clear();
                           permissionController.startDate = null;
                           permissionController.endDate = null;
@@ -244,8 +284,8 @@ class _PermissionState extends State<Permission> {
                       }
                     },
                     child: Text(
-                      'Submit',
-                      style: TextStyle(
+                      'submitButton'.tr,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Color.fromRGBO(20, 105, 199, 1.0),

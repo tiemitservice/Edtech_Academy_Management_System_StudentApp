@@ -4,7 +4,7 @@ publish_to: 'none'
 version: 0.1.0
 
 environment:
-  sdk: ^3.6.1
+  sdk: '>=3.0.0 <4.0.0' # It's good practice to use a range
 
 dependencies:
   flutter:
@@ -12,27 +12,36 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   get_storage: ^2.1.1
-  get: ^4.7.2
-  intl: any
+  get: ^4.6.6 # Using a specific version is better than a range
+  intl: ^0.19.0 # Using a specific version is better than 'any'
   flutter_svg: ^2.0.7
-  http: ^1.2.2
-  shared_preferences: ^2.5.3
-  socket_io_client: ^3.1.2
-  flutter_secure_storage: ^9.2.4
-  
-
-
+  http: ^1.2.1
+  shared_preferences: ^2.2.3
+  socket_io_client: ^3.0.0
+  flutter_secure_storage: ^9.0.0
+  flutter_staggered_animations: ^1.1.1
+  google_fonts: ^6.3.0
+  shimmer_animation: ^2.2.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^3.0.0
+  # FIX: Moved flutter_launcher_icons here
+  flutter_launcher_icons: ^0.13.1
+
+# FIX: Configuration for flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: true
+  # FIX: Use forward slash and correct folder name
+  image_path: "assets/logoApp.png"
 
 flutter:
   uses-material-design: true
   generate: true
   assets:
-
+    - assets/logoApp.png # Good practice to list your source icon here
     - assets/bigLogoEn.svg
     - assets/bigLogoKh.svg
     - assets/logoKh.svg

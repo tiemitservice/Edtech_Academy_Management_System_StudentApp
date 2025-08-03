@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../controller/permission_controller.dart';
 
 class Permission_Status extends StatefulWidget {
-  const Permission_Status({Key? key}) : super(key: key);
+  const Permission_Status({Key? key, required String email}) : super(key: key);
 
   @override
   State<Permission_Status> createState() => _Permission_StatusState();
@@ -13,7 +13,6 @@ class _Permission_StatusState extends State<Permission_Status> {
   final permissionController = Get.find<PermissionController>();
 
   @override
-
   void initState() {
     super.initState();
     permissionController.fetchStudentPermissions();
@@ -23,10 +22,10 @@ class _Permission_StatusState extends State<Permission_Status> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.white), // <-- Add this line
-        title: const Text(
-          "Permission Status",
-          style: TextStyle(color: Colors.white, fontSize: 20),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text(
+          "permissionStatusTitle".tr,
+          style: const TextStyle(color: Colors.white, fontSize: 20),
         ),
         centerTitle: true,
         backgroundColor: Colors.blueAccent,
@@ -37,30 +36,36 @@ class _Permission_StatusState extends State<Permission_Status> {
         }
 
         if (permissionController.permissions.isEmpty) {
-          return const Center(child: Text("No permission requests found."));
+          return Center(child: Text("noPermissionRequests".tr));
         }
 
         return ListView.builder(
           itemCount: permissionController.permissions.length,
           itemBuilder: (context, index) {
             final permission = permissionController.permissions[index];
-            final reason = permission['reason'] ?? 'No reason';
-            final status = permission['permissent_status'] ?? 'pending';
+            final reason = permission['reason'] ?? 'noReason'.tr;
+            final statusKey =
+                (permission['permissent_status'] ?? 'pending').toLowerCase();
 
             final holdDates = (permission['hold_date'] as List<dynamic>)
                 .map((d) => d.toString().split("T").first)
                 .join(" → ");
 
             Color statusColor;
-            switch (status.toLowerCase()) {
+            String statusText;
+
+            switch (statusKey) {
               case 'accepted':
                 statusColor = Colors.green;
+                statusText = 'statusAccepted'.tr;
                 break;
               case 'rejected':
                 statusColor = Colors.red;
+                statusText = 'statusRejected'.tr;
                 break;
               default:
                 statusColor = Colors.orange;
+                statusText = 'statusPending'.tr;
             }
 
             return Card(
@@ -71,8 +76,8 @@ class _Permission_StatusState extends State<Permission_Status> {
               ),
               child: ListTile(
                 contentPadding: const EdgeInsets.all(16),
-                title: Text("Reason: $reason"),
-                subtitle: Text("Date: $holdDates"),
+                title: Text("${'reasonLabel'.tr}: $reason"),
+                subtitle: Text("${'dateLabel'.tr}: $holdDates"),
                 trailing: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -81,7 +86,7 @@ class _Permission_StatusState extends State<Permission_Status> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    status.toString().capitalize ?? '',
+                    statusText,
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
