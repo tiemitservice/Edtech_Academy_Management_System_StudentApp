@@ -19,7 +19,7 @@ import 'service/lang_service.dart';
 import 'package:get_storage/get_storage.dart';
 import 'allScreen/homescreen.dart';
 import 'allScreen/class.dart';
-import 'utils/app_colors.dart'; // Import AppColors
+import 'utils/app_colors.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,7 +74,7 @@ class MyApp extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            textStyle: const TextStyle(fontWeight: FontWeight.bold),
+            textStyle: GoogleFonts.suwannaphum(fontWeight: FontWeight.bold),
           ),
         ),
         cardTheme: CardTheme(
@@ -100,8 +100,8 @@ class MyApp extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: AppColors.borderGrey),
           ),
-          labelStyle: const TextStyle(color: AppColors.mediumText),
-          hintStyle: const TextStyle(color: AppColors.mediumText),
+          labelStyle: GoogleFonts.suwannaphum(color: AppColors.mediumText),
+          hintStyle: GoogleFonts.suwannaphum(color: AppColors.mediumText),
         ),
       ),
       debugShowCheckedModeBanner: false,

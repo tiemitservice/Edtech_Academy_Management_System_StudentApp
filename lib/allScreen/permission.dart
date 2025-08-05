@@ -1,3 +1,4 @@
+// lib/allScreen/permission.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -14,19 +15,37 @@ class Permission extends StatefulWidget {
 
 class _PermissionState extends State<Permission> {
   final _formKey = GlobalKey<FormState>();
-
-  DateTime? startDate;
-  DateTime? endDate;
-
   final permissionController = Get.find<PermissionController>();
+
+  late final Worker _listener;
 
   @override
   void initState() {
     super.initState();
-    final String argEmail = Get.arguments['email'] ?? widget.email;
-    permissionController.fetchStudentByEmail(argEmail);
-    permissionController.reasonController.text = '';
-    permissionController.fetchStudentPermissions();
+
+    _listener =
+        ever(permissionController.editingPermissionId, (String? permissionId) {
+      if (mounted) {
+        setState(() {
+          // This rebuilds the UI to reflect the editing state change.
+        });
+      }
+    });
+
+    if (permissionController.editingPermissionId.value == null) {
+      permissionController.clearForm();
+      if (mounted) {
+        setState(() {});
+      }
+    }
+
+    permissionController.fetchStudentByEmail(widget.email);
+  }
+
+  @override
+  void dispose() {
+    _listener.dispose(); // This is the crucial fix. It cancels the listener.
+    super.dispose();
   }
 
   String formatWithWeekday(DateTime date) {
@@ -35,6 +54,8 @@ class _PermissionState extends State<Permission> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = permissionController.editingPermissionId.value != null;
+
     return Scaffold(
       backgroundColor: AppColors.lightBackground,
       appBar: AppBar(
@@ -42,7 +63,7 @@ class _PermissionState extends State<Permission> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          'addPermissionTitle'.tr,
+          isEditing ? 'editButton'.tr : 'addPermissionTitle'.tr,
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -51,10 +72,12 @@ class _PermissionState extends State<Permission> {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-          onPressed: () =>
-              Get.offAllNamed('/home_page', arguments: widget.email),
-        ),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                color: Colors.white),
+            onPressed: () {
+              permissionController.clearForm();
+              Get.back();
+            }),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -70,13 +93,13 @@ class _PermissionState extends State<Permission> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildClassSelectionSection(),
+                _buildClassSelectionSection(isEditing),
                 const SizedBox(height: 20),
                 _buildDateSelectionSection(),
                 const SizedBox(height: 25),
                 _buildReasonSection(),
                 const SizedBox(height: 30),
-                _buildSubmitButton(),
+                _buildSubmitButton(isEditing),
               ],
             ),
           ),
@@ -85,32 +108,30 @@ class _PermissionState extends State<Permission> {
     );
   }
 
-  Widget _buildClassSelectionSection() {
-    return Obx(() {
-      final activeClasses = permissionController.availableClasses
-          .where((classModel) => classModel.markAsCompleted)
-          .toList();
-
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'selectClassLabel'.tr,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: AppColors.darkText,
-              fontSize: 16,
-            ),
+  Widget _buildClassSelectionSection(bool isEditing) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'selectClassLabel'.tr,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.darkText,
+            fontSize: 16,
           ),
-          const SizedBox(height: 12),
-          if (activeClasses.isEmpty)
-            Container(
+        ),
+        const SizedBox(height: 12),
+        Obx(() {
+          final activeClasses = permissionController.availableClasses
+              .where((classModel) => classModel.markAsCompleted)
+              .toList();
+          if (activeClasses.isEmpty) {
+            return Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppColors.lightFillColor,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.borderGrey),
-                
               ),
               child: Center(
                 child: Text(
@@ -118,9 +139,9 @@ class _PermissionState extends State<Permission> {
                   style: const TextStyle(color: AppColors.mediumText),
                 ),
               ),
-            )
-          else
-            DropdownButtonFormField<String>(
+            );
+          } else {
+            return DropdownButtonFormField<String>(
               value: permissionController.selectedClassName.value.isEmpty
                   ? null
                   : permissionController.selectedClassName.value,
@@ -131,6 +152,8 @@ class _PermissionState extends State<Permission> {
                   child: Text(classModel.name),
                 );
               }).toList(),
+              // The fix is here:
+              // We enable the onChanged callback for editing.
               onChanged: (value) {
                 if (value != null) {
                   permissionController.setSelectedClass(value);
@@ -141,10 +164,11 @@ class _PermissionState extends State<Permission> {
               ),
               validator: (value) =>
                   value == null ? 'selectClassValidator'.tr : null,
-            ),
-        ],
-      );
-    });
+            );
+          }
+        }),
+      ],
+    );
   }
 
   Widget _buildDateSelectionSection() {
@@ -167,8 +191,11 @@ class _PermissionState extends State<Permission> {
               context: context,
               firstDate: today,
               lastDate: DateTime(2100),
-              initialDateRange: startDate != null && endDate != null
-                  ? DateTimeRange(start: startDate!, end: endDate!)
+              initialDateRange: permissionController.startDate != null &&
+                      permissionController.endDate != null
+                  ? DateTimeRange(
+                      start: permissionController.startDate!,
+                      end: permissionController.endDate!)
                   : null,
               builder: (context, child) {
                 return Theme(
@@ -186,8 +213,6 @@ class _PermissionState extends State<Permission> {
             );
             if (picked != null) {
               setState(() {
-                startDate = picked.start;
-                endDate = picked.end;
                 permissionController.startDate = picked.start;
                 permissionController.endDate = picked.end;
               });
@@ -208,19 +233,25 @@ class _PermissionState extends State<Permission> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        startDate == null || endDate == null
+                        permissionController.startDate == null ||
+                                permissionController.endDate == null
                             ? 'chooseDateHint'.tr
-                            : formatWithWeekday(startDate!),
+                            : formatWithWeekday(
+                                permissionController.startDate!),
                         style: TextStyle(
                           fontSize: 16,
-                          color: (startDate == null || endDate == null)
+                          color: (permissionController.startDate == null ||
+                                  permissionController.endDate == null)
                               ? AppColors.mediumText
                               : AppColors.darkText,
                         ),
                       ),
-                      if (startDate != null && endDate != null)
+                      if (permissionController.startDate != null &&
+                          permissionController.endDate != null &&
+                          permissionController.startDate !=
+                              permissionController.endDate)
                         Text(
-                          '${'dateTo'.tr}\n${formatWithWeekday(endDate!)}',
+                          '${'dateTo'.tr}\n${formatWithWeekday(permissionController.endDate!)}',
                           style: const TextStyle(
                             fontSize: 16,
                             color: AppColors.darkText,
@@ -270,7 +301,7 @@ class _PermissionState extends State<Permission> {
     );
   }
 
-  Widget _buildSubmitButton() {
+  Widget _buildSubmitButton(bool isEditing) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -307,15 +338,17 @@ class _PermissionState extends State<Permission> {
                 colorText: AppColors.cardBackground,
               );
             } else {
-              await permissionController.submitPermission();
-              permissionController.reasonController.clear();
-              permissionController.startDate = null;
-              permissionController.endDate = null;
-              setState(() {});
+              if (isEditing) {
+                await permissionController.updatePermission(
+                    permissionController.editingPermissionId.value!);
+              } else {
+                await permissionController.submitPermission();
+              }
+              permissionController.clearForm();
             }
           }
         },
-        child: Text('submitButton'.tr),
+        child: Text(isEditing ? 'updateButton'.tr : 'submitButton'.tr),
       ),
     );
   }

@@ -63,6 +63,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildSectionTitle("attendancePermissions".tr),
                   const SizedBox(height: 16),
                   _buildPermissionInfoCard(),
+                  const SizedBox(height: 24),
+                  _buildRecentPermissions(),
                 ],
               ),
             ),
@@ -105,9 +107,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
       return InkWell(
         onTap: () {
-          if (student != null) {
-            Get.toNamed('/profile', arguments: widget.email);
-          }
+          // All card taps now go to permission status
+          Get.toNamed('/profile', arguments: {'email': widget.email});
         },
         borderRadius: BorderRadius.circular(20),
         child: Container(
@@ -182,7 +183,8 @@ class _HomeScreenState extends State<HomeScreen> {
           child: _buildActionCard(
             title: 'viewClasses'.tr,
             icon: Icons.class_rounded,
-            onTap: () => Get.toNamed('/class', arguments: widget.email),
+            onTap: () => Get.toNamed('/class',
+                arguments: {'email': widget.email}), // Changed route
             color: AppColors.primaryBlue,
           ),
         ),
@@ -191,8 +193,9 @@ class _HomeScreenState extends State<HomeScreen> {
           child: _buildActionCard(
             title: 'addPermission'.tr,
             icon: Icons.add_circle_outline_rounded,
-            onTap: () => Get.toNamed('/permission',
-                arguments: {'email': authController.userEmail.value}),
+            onTap: () => Get.toNamed('/permission', arguments: {
+              'email': authController.userEmail.value
+            }), // Corrected route
             color: AppColors.successGreen,
           ),
         ),
@@ -243,13 +246,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildPermissionInfoCard() {
     return Obx(() {
       final absenceCount = permissionController.permissions
-          .where((p) => p['permissent_status'] == 'rejected')
+          .where((p) =>
+              (p['permissent_status'] ?? '').toLowerCase() == 'accepted' ||
+              (p['permissent_status'] ?? '').toLowerCase() == 'approved')
           .length;
       final totalPermissions = permissionController.permissions.length;
 
       return InkWell(
         onTap: () {
-          // Corrected access to student and email
           Get.toNamed('/permission_status', arguments: {'email': widget.email});
         },
         borderRadius: BorderRadius.circular(16),
@@ -327,13 +331,162 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // The buildDrawer method containing the logout ListTile
+  Widget _buildRecentPermissions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildSectionTitle("recentPermissions".tr),
+            TextButton(
+              onPressed: () => Get.toNamed('/permission_status',
+                  arguments: {'email': widget.email}),
+              child: Text(
+                "seeAll".tr,
+                style: const TextStyle(
+                    color: AppColors.primaryBlue, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Obx(() {
+          final recentPermissions =
+              permissionController.permissions.take(3).toList();
+
+          if (recentPermissions.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Text(
+                  "noRecentPermissions".tr,
+                  style: const TextStyle(
+                      fontSize: 16, color: AppColors.mediumText),
+                ),
+              ),
+            );
+          }
+
+          return Column(
+            children: recentPermissions.map((permission) {
+              final reason = permission['reason'] ?? 'noReason'.tr;
+              final statusKey =
+                  (permission['permissent_status'] ?? 'pending').toLowerCase();
+              final dates = (permission['hold_date'] as List<dynamic>?)
+                      ?.map((d) => d.toString().split("T").first)
+                      .join(" → ") ??
+                  '';
+
+              Color statusColor;
+              String statusText;
+
+              switch (statusKey) {
+                case 'accepted':
+                case 'approved':
+                  statusColor = AppColors.successGreen;
+                  statusText = 'statusAccepted'.tr;
+                  break;
+                case 'rejected':
+                case 'denied':
+                  statusColor = AppColors.declineRed;
+                  statusText = 'statusRejected'.tr;
+                  break;
+                default:
+                  statusColor = AppColors.pendingOrange;
+                  statusText = 'statusPending'.tr;
+              }
+
+              return _buildRecentPermissionCard(
+                reason: reason,
+                dates: dates,
+                statusText: statusText,
+                statusColor: statusColor,
+              );
+            }).toList(),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildRecentPermissionCard({
+    required String reason,
+    required String dates,
+    required String statusText,
+    required Color statusColor,
+  }) {
+    return InkWell(
+      onTap: () {
+        Get.toNamed('/permission_status',
+            arguments: {'email': authController.userEmail.value});
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.cardBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.borderGrey),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    reason,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.darkText,
+                      fontSize: 16,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    dates,
+                    style: const TextStyle(
+                      color: AppColors.mediumText,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _buildStatusChip(statusText, statusColor),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
   Drawer _buildDrawer(BuildContext context) {
     final AuthController authController = Get.find<AuthController>();
     final StudentController studentController = Get.find<StudentController>();
     final LanguageController languageController =
         Get.find<LanguageController>();
-    final String email = authController.userEmail.value; // Assuming email is available
+    final String email = authController.userEmail.value;
 
     return Drawer(
       child: Container(
@@ -371,7 +524,6 @@ class _HomeScreenState extends State<HomeScreen> {
               iconColor: AppColors.declineRed,
               titleColor: AppColors.declineRed,
               onTap: () {
-                // Show the new confirmation dialog
                 _showLogoutDialog(context, authController);
               },
             ),
@@ -472,14 +624,14 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Row(
                 children: [
                   _buildLanguageButton(
-                    'assets/eng.svg', // Assuming you have an SVG flag asset
+                    'assets/eng.svg',
                     'English',
                     true,
                     languageController.isEnglish.value,
                     languageController,
                   ),
                   _buildLanguageButton(
-                    'assets/kh.svg', // Assuming you have an SVG flag asset
+                    'assets/kh.svg',
                     'ខ្មែរ',
                     false,
                     !languageController.isEnglish.value,
@@ -494,7 +646,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-// The new, refined helper method for the language buttons
   Widget _buildLanguageButton(
     String iconPath,
     String text,
@@ -539,7 +690,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-// New helper method for the logout confirmation dialog
   void _showLogoutDialog(BuildContext context, AuthController authController) {
     Get.defaultDialog(
       title: 'logout'.tr,
@@ -557,7 +707,7 @@ class _HomeScreenState extends State<HomeScreen> {
       radius: 12,
       confirm: ElevatedButton(
         onPressed: () {
-          Get.back(); // Close the dialog
+          Get.back();
           authController.logout();
         },
         style: ElevatedButton.styleFrom(
@@ -585,9 +735,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-
-
-  
 
   Widget _buildFeedbackButton(BuildContext context) {
     return IconButton(

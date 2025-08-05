@@ -10,7 +10,7 @@ class AppTextStyles {
   );
 
   static final TextStyle headerSubtitle = GoogleFonts.suwannaphum(
-    color: AppColors.cardBackground.withOpacity(0.85),
+    color: AppColors.cardBackground.withAlpha(60),
     fontSize: 16,
   );
 
