@@ -49,6 +49,8 @@ flutter:
     - assets/profile.jpg
     - assets/tiem_logo.svg
     - assets/Group.svg
+    - assets/eng.svg
+    - assets/kh.svg
     - assets/data/commune.json
     - assets/data/district.json
     - assets/data/province.json

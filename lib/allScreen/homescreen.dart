@@ -1,11 +1,7 @@
-import 'package:edtechschool/allScreen/class.dart';
-import 'package:edtechschool/utils/app_colors.dart'; // <-- MODIFIED: Import AppColors
+import 'package:edtechschool/utils/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../controller/auth_controller.dart';
@@ -23,456 +19,271 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // ... (controllers and other logic remain the same)
   final AuthController authController = Get.find<AuthController>();
-  final StudentController studentController =
-      Get.put(StudentController(GetStorage().read('userEmail') ?? ''));
-  String studentName = '';
-  bool isLoading = true;
+  late final StudentController studentController;
   final permissionController = Get.find<PermissionController>();
   final LanguageController languageController = Get.find<LanguageController>();
 
   @override
   void initState() {
     super.initState();
-    if (authController.userName.value.isNotEmpty) {
-      studentName = authController.userName.value;
-      isLoading = false;
-    } else {
-      fetchStudentName();
-    }
+    studentController = Get.put(StudentController());
+    studentController.fetchStudentByEmail();
     permissionController.fetchStudentPermissions();
   }
 
   Future<void> _refreshData() async {
-    await fetchStudentName();
+    await studentController.fetchStudentByEmail();
     await permissionController.fetchStudentPermissions();
-  }
-
-  Future<void> fetchStudentName() async {
-    // This function's logic remains the same
-    final authController = Get.find<AuthController>();
-    try {
-      final response = await http.get(
-        Uri.parse('http://188.166.242.109:5000/api/students'),
-      );
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data is List && data.isNotEmpty) {
-          if (mounted) {
-            setState(() {
-              studentName = data[0]['eng_name'] ?? 'Student';
-              isLoading = false;
-            });
-          }
-          authController.userName.value = data[0]['eng_name'] ?? '';
-        } else {
-          if (mounted) {
-            setState(() {
-              studentName = 'Unknown';
-              isLoading = false;
-            });
-          }
-        }
-      } else {
-        if (mounted) {
-          setState(() {
-            studentName = 'Error';
-            isLoading = false;
-          });
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          studentName = 'Error';
-          isLoading = false;
-        });
-      }
-      print('Error fetching student name: $e');
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
-      backgroundColor: AppColors.lightBackground, // <-- MODIFIED
-      drawer: buildDrawer(context),
-      bottomNavigationBar: buildBottomNavBar(context),
+      backgroundColor: AppColors.lightBackground,
+      drawer: _buildDrawer(context),
+      appBar: _buildAppBar(context),
       body: SafeArea(
         child: RefreshIndicator(
-          backgroundColor: AppColors.cardBackground, // <-- MODIFIED
-          color: AppColors.primaryBlue, // <-- MODIFIED
+          backgroundColor: AppColors.cardBackground,
+          color: AppColors.primaryBlue,
           onRefresh: _refreshData,
-          child: CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                backgroundColor: AppColors.primaryBlue, // <-- MODIFIED
-                pinned: true,
-                floating: true,
-                automaticallyImplyLeading: false,
-                title: buildAppBar(context),
-                expandedHeight: 200,
-                flexibleSpace: FlexibleSpaceBar(
-                  background: buildHeader(screenWidth),
-                ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildProfileHeader(),
+                  const SizedBox(height: 24),
+                  _buildSectionTitle("quickActions".tr),
+                  const SizedBox(height: 16),
+                  _buildQuickActionCards(),
+                  const SizedBox(height: 24),
+                  _buildSectionTitle("attendancePermissions".tr),
+                  const SizedBox(height: 16),
+                  _buildPermissionInfoCard(),
+                ],
               ),
-              SliverToBoxAdapter(
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: screenWidth * 0.05,
-                      vertical: screenHeight * 0.02),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "todaysClass".tr,
-                        style: GoogleFonts.suwannaphum(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                          color: AppColors.darkText, // <-- MODIFIED
-                        ),
-                      ),
-                      SizedBox(height: screenHeight * 0.02),
-                      buildTodayClassButton(),
-                      SizedBox(height: screenHeight * 0.03),
-                      buildPermissionInfoCard(),
-                      SizedBox(height: screenHeight * 0.03),
-                      buildAddPermissionButton(),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
-      floatingActionButton: buildFeedbackButton(context),
+      bottomNavigationBar: _buildBottomNavBar(context),
     );
   }
 
-  Widget buildAppBar(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu,
-                color: AppColors.cardBackground, size: 28), // <-- MODIFIED
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
-        SvgPicture.asset(
-          'assets/bigLogoEn.svg',
+  AppBar _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: AppColors.primaryBlue,
+      elevation: 0,
+      title: Obx(() {
+        final isEnglish = languageController.isEnglish.value;
+        return SvgPicture.asset(
+          isEnglish ? 'assets/bigLogoEn.svg' : 'assets/bigLogoKh.svg',
           width: 180,
           height: 40,
+        );
+      }),
+      centerTitle: true,
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: const Icon(Icons.menu, color: AppColors.onPrimary),
+          onPressed: () => Scaffold.of(context).openDrawer(),
         ),
-        const SizedBox(width: 48), // To balance the menu icon
-        Obx(() {
-          final student = studentController.student.value;
-          return CircleAvatar(
-            radius: 20,
-            backgroundColor: AppColors.cardBackground, // <-- MODIFIED
-            backgroundImage: (student?.image?.isNotEmpty ?? false)
-                ? NetworkImage(student!.image!)
-                : const AssetImage('assets/profile.jpg') as ImageProvider,
-          );
-        }),
+      ),
+      actions: [
+        _buildFeedbackButton(context),
       ],
     );
   }
 
-  Widget buildHeader(double screenWidth) {
-    return Container(
-      color: AppColors
-          .primaryBlue, // <-- MODIFIED: Ensure header background is consistent
-      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05)
-          .copyWith(top: 100),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'welcome'.tr,
-                  style: GoogleFonts.suwannaphum(
-                    color: AppColors.cardBackground
-                        .withOpacity(0.8), // <-- MODIFIED
-                    fontSize: 16,
-                  ),
-                ),
-                Obx(() {
-                  final student = studentController.student.value;
-                  return Text(
-                    (student?.engName.isNotEmpty ?? false)
-                        ? student!.engName
-                        : 'student'.tr,
-                    style: GoogleFonts.suwannaphum(
-                      color: AppColors.cardBackground, // <-- MODIFIED
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  );
-                }),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildProfileHeader() {
+    return Obx(() {
+      final student = studentController.student.value;
+      final isEnglish = languageController.isEnglish.value;
 
-  Drawer buildDrawer(BuildContext context) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(
-              color: AppColors.primaryBlue, // <-- MODIFIED
-            ),
-            child: Obx(() {
-              if (studentController.isLoading.value) {
-                return const Center(
-                    child: CircularProgressIndicator(
-                        color: AppColors.cardBackground)); // <-- MODIFIED
-              }
-              final student = studentController.student.value;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      Get.toNamed('/profile',
-                          arguments: {'email': widget.email});
-                    },
-                    child: CircleAvatar(
-                      radius: 32,
-                      backgroundImage: student != null &&
-                              student.image != null &&
-                              student.image!.isNotEmpty
-                          ? NetworkImage(student.image!)
-                          : const AssetImage('assets/profile.jpg')
-                              as ImageProvider,
+      return InkWell(
+        onTap: () {
+          if (student != null) {
+            Get.toNamed('/profile', arguments: widget.email);
+          }
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.borderGrey),
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 35,
+                backgroundColor: AppColors.lightFillColor,
+                backgroundImage: student?.image?.isNotEmpty ?? false
+                    ? NetworkImage(student!.image!)
+                    : const AssetImage('assets/profile.jpg') as ImageProvider,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'welcome'.tr,
+                      style: const TextStyle(
+                        color: AppColors.mediumText,
+                        fontSize: 16,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Flexible(
-                    child: Text(
-                      student?.engName ?? 'Unknown',
-                      style: GoogleFonts.suwannaphum(
-                          color: AppColors.cardBackground,
-                          fontSize: 24), // <-- MODIFIED
+                    const SizedBox(height: 4),
+                    Text(
+                      student == null
+                          ? 'student'.tr
+                          : isEnglish
+                              ? student.engName
+                              : student.khName,
+                      style: const TextStyle(
+                        color: AppColors.darkText,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
-              );
-            }),
-          ),
-          ListTile(
-            leading: const Icon(Icons.home,
-                color: AppColors.primaryBlue), // <-- MODIFIED
-            title: Text('home'.tr,
-                style: GoogleFonts.suwannaphum(
-                    color: AppColors.darkText)), // <-- MODIFIED
-            onTap: () {
-              Navigator.pop(context);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.library_books_outlined,
-                color: AppColors.primaryBlue), // <-- MODIFIED
-            title: Text('Permission'.tr,
-                style: GoogleFonts.suwannaphum(
-                    color: AppColors.darkText)), // <-- MODIFIED
-            onTap: () {
-              Navigator.pop(context);
-              Get.toNamed('/permission_status', arguments: {
-                'email': widget.email,
-              });
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.person_outline,
-                color: AppColors.primaryBlue), // <-- MODIFIED
-            title: Text('feedback'.tr,
-                style: GoogleFonts.suwannaphum(
-                    color: AppColors.darkText)), // <-- MODIFIED
-            onTap: () {
-              Get.toNamed('/feedback',
-                  arguments: authController.userEmail.value);
-            },
-          ),
-          buildLanguageToggle(),
-          const Divider(color: AppColors.borderGrey), // <-- MODIFIED
-          ListTile(
-            leading: const Icon(Icons.logout,
-                color: AppColors.declineRed), // <-- MODIFIED
-            title: Text('logout'.tr,
-                style: GoogleFonts.suwannaphum(
-                    color: AppColors.declineRed)), // <-- MODIFIED
-            onTap: () {
-              GetStorage().remove('userEmail');
-              Get.offAllNamed('/');
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget buildLanguageToggle() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'language'.tr,
-            style: GoogleFonts.suwannaphum(
-              color: AppColors.mediumText, // <-- MODIFIED
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Obx(
-            () => Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => languageController.toggleLanguage(true),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: languageController.isEnglish.value
-                            ? AppColors.primaryBlue // <-- MODIFIED
-                            : AppColors.lightFillColor, // <-- MODIFIED
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(8),
-                          bottomLeft: Radius.circular(8),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '🇺🇸 English',
-                          style: GoogleFonts.suwannaphum(
-                            color: languageController.isEnglish.value
-                                ? AppColors.cardBackground // <-- MODIFIED
-                                : AppColors.darkText, // <-- MODIFIED
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => languageController.toggleLanguage(false),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: !languageController.isEnglish.value
-                            ? AppColors.primaryBlue // <-- MODIFIED
-                            : AppColors.lightFillColor, // <-- MODIFIED
-                        borderRadius: const BorderRadius.only(
-                          topRight: Radius.circular(8),
-                          bottomRight: Radius.circular(8),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '🇰🇭 ខ្មែរ',
-                          style: GoogleFonts.suwannaphum(
-                            color: !languageController.isEnglish.value
-                                ? AppColors.cardBackground // <-- MODIFIED
-                                : AppColors.darkText, // <-- MODIFIED
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget buildTodayClassButton() {
-    return Card(
-      elevation: 4,
-      color: AppColors
-          .primaryBlue, // <-- MODIFIED: Set a solid color for consistency
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: InkWell(
-        onTap: () => Get.to(() => ClassScreen(email: widget.email)),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'viewClasses'.tr,
-                style: GoogleFonts.suwannaphum(
-                  color: AppColors.cardBackground, // <-- MODIFIED
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
+                  ],
                 ),
               ),
-              const Icon(
-                Icons.arrow_forward_ios,
-                size: 22,
-                color: AppColors.cardBackground, // <-- MODIFIED
-              ),
+              const SizedBox(width: 16),
+              const Icon(Icons.arrow_forward_ios, color: AppColors.mediumText),
             ],
           ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 18,
+        color: AppColors.darkText,
+      ),
+    );
+  }
+
+  Widget _buildQuickActionCards() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildActionCard(
+            title: 'viewClasses'.tr,
+            icon: Icons.class_rounded,
+            onTap: () => Get.toNamed('/class', arguments: widget.email),
+            color: AppColors.primaryBlue,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildActionCard(
+            title: 'addPermission'.tr,
+            icon: Icons.add_circle_outline_rounded,
+            onTap: () => Get.toNamed('/permission',
+                arguments: {'email': authController.userEmail.value}),
+            color: AppColors.successGreen,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionCard(
+      {required String title,
+      required IconData icon,
+      required VoidCallback onTap,
+      required Color color}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: AppColors.cardBackground, size: 36),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                color: AppColors.cardBackground,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget buildPermissionInfoCard() {
+  Widget _buildPermissionInfoCard() {
     return Obx(() {
       final absenceCount = permissionController.permissions
           .where((p) => p['permissent_status'] == 'rejected')
           .length;
+      final totalPermissions = permissionController.permissions.length;
 
-      return Card(
-        elevation: 2,
-        color: AppColors.cardBackground, // <-- MODIFIED
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildPermissionStat(
+      return InkWell(
+        onTap: () {
+          // Corrected access to student and email
+          Get.toNamed('/permission_status', arguments: {'email': widget.email});
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.borderGrey),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildPermissionStat(
                   "totalPermission".tr,
-                  '${permissionController.permissions.length}',
+                  '$totalPermissions',
                   Icons.library_books_outlined,
-                  AppColors.primaryBlue), // <-- MODIFIED
-              SizedBox(
-                height: 60,
-                child: VerticalDivider(
-                  color: AppColors.borderGrey, // <-- MODIFIED
+                  AppColors.primaryBlue,
                 ),
-              ),
-              _buildPermissionStat("absence".tr, '$absenceCount',
-                  Icons.cancel_outlined, AppColors.declineRed), // <-- MODIFIED
-            ],
+                const SizedBox(
+                  height: 60,
+                  child: VerticalDivider(
+                    color: AppColors.borderGrey,
+                  ),
+                ),
+                _buildPermissionStat(
+                  "absence".tr,
+                  '$absenceCount',
+                  Icons.cancel_outlined,
+                  AppColors.declineRed,
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -481,90 +292,320 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildPermissionStat(
       String title, String value, IconData icon, Color color) {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 25,
-          backgroundColor: color.withOpacity(0.1),
-          child: Icon(
-            icon,
-            color: color,
-            size: 28,
+    return Expanded(
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 25,
+            backgroundColor: color.withOpacity(0.15),
+            child: Icon(
+              icon,
+              color: color,
+              size: 28,
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: GoogleFonts.suwannaphum(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: color,
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: GoogleFonts.suwannaphum(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          title,
-          style: GoogleFonts.suwannaphum(
-            fontSize: 14,
-            color: AppColors.mediumText, // <-- MODIFIED
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: GoogleFonts.suwannaphum(
+              fontSize: 14,
+              color: AppColors.mediumText,
+            ),
+            textAlign: TextAlign.center,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget buildAddPermissionButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: () {
-          Get.toNamed('/permission', arguments: {
-            'email': authController.userEmail.value,
-          });
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.successGreen, // <-- MODIFIED
-          padding: const EdgeInsets.symmetric(vertical: 15),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 2,
+  // The buildDrawer method containing the logout ListTile
+  Drawer _buildDrawer(BuildContext context) {
+    final AuthController authController = Get.find<AuthController>();
+    final StudentController studentController = Get.find<StudentController>();
+    final LanguageController languageController =
+        Get.find<LanguageController>();
+    final String email = authController.userEmail.value; // Assuming email is available
+
+    return Drawer(
+      child: Container(
+        color: AppColors.cardBackground,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            _buildDrawerHeader(studentController),
+            _buildDrawerItem(
+              icon: Icons.home_outlined,
+              title: 'home'.tr,
+              onTap: () => Navigator.pop(context),
+            ),
+            _buildDrawerItem(
+              icon: Icons.library_books_outlined,
+              title: 'Permission'.tr,
+              onTap: () {
+                Navigator.pop(context);
+                Get.toNamed('/permission_status', arguments: {'email': email});
+              },
+            ),
+            _buildDrawerItem(
+              icon: Icons.feedback_outlined,
+              title: 'feedback'.tr,
+              onTap: () {
+                Get.toNamed('/feedback',
+                    arguments: authController.userEmail.value);
+              },
+            ),
+            _buildLanguageToggle(),
+            const Divider(color: AppColors.borderGrey, height: 1),
+            _buildDrawerItem(
+              icon: Icons.logout,
+              title: 'logout'.tr,
+              iconColor: AppColors.declineRed,
+              titleColor: AppColors.declineRed,
+              onTap: () {
+                // Show the new confirmation dialog
+                _showLogoutDialog(context, authController);
+              },
+            ),
+          ],
         ),
-        icon: const Icon(Icons.add,
-            color: AppColors.cardBackground), // <-- MODIFIED
-        label: Text(
-          "addPermission".tr,
+      ),
+    );
+  }
+
+  Widget _buildDrawerHeader(StudentController studentController) {
+    return Obx(() {
+      final student = studentController.student.value;
+      final isEnglish = languageController.isEnglish.value;
+
+      return UserAccountsDrawerHeader(
+        accountName: Text(
+          student == null
+              ? 'student'.tr
+              : isEnglish
+                  ? student.engName
+                  : student.khName,
           style: GoogleFonts.suwannaphum(
+            color: AppColors.cardBackground,
+            fontSize: 20,
             fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: AppColors.cardBackground, // <-- MODIFIED
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
+        accountEmail: Text(
+          student?.email ?? 'notProvided'.tr,
+          style: const TextStyle(color: AppColors.lightFillColor, fontSize: 14),
+          overflow: TextOverflow.ellipsis,
+        ),
+        currentAccountPicture: GestureDetector(
+          onTap: () {
+            Get.toNamed('/profile', arguments: authController.userEmail.value);
+          },
+          child: CircleAvatar(
+            radius: 32,
+            backgroundColor: AppColors.cardBackground,
+            backgroundImage: student?.image?.isNotEmpty ?? false
+                ? NetworkImage(student!.image!)
+                : const AssetImage('assets/profile.jpg') as ImageProvider,
+          ),
+        ),
+        decoration: const BoxDecoration(
+          color: AppColors.primaryBlue,
+        ),
+      );
+    });
+  }
+
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    Color iconColor = AppColors.primaryBlue,
+    Color titleColor = AppColors.darkText,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: iconColor),
+      title: Text(
+        title,
+        style: GoogleFonts.suwannaphum(
+          color: titleColor,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildLanguageToggle() {
+    final LanguageController languageController =
+        Get.find<LanguageController>();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'language'.tr,
+            style: GoogleFonts.suwannaphum(
+              color: AppColors.mediumText,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Obx(
+            () => Container(
+              decoration: BoxDecoration(
+                color: AppColors.lightFillColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.borderGrey),
+              ),
+              child: Row(
+                children: [
+                  _buildLanguageButton(
+                    'assets/eng.svg', // Assuming you have an SVG flag asset
+                    'English',
+                    true,
+                    languageController.isEnglish.value,
+                    languageController,
+                  ),
+                  _buildLanguageButton(
+                    'assets/kh.svg', // Assuming you have an SVG flag asset
+                    'ខ្មែរ',
+                    false,
+                    !languageController.isEnglish.value,
+                    languageController,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+// The new, refined helper method for the language buttons
+  Widget _buildLanguageButton(
+    String iconPath,
+    String text,
+    bool isEnglish,
+    bool isSelected,
+    LanguageController languageController,
+  ) {
+    return Expanded(
+      child: InkWell(
+        onTap: () => languageController.toggleLanguage(isEnglish),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primaryBlue : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SvgPicture.asset(
+                  iconPath,
+                  width: 20,
+                  height: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  text,
+                  style: GoogleFonts.suwannaphum(
+                    color: isSelected
+                        ? AppColors.cardBackground
+                        : AppColors.darkText,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget buildFeedbackButton(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: () {
-        Get.toNamed('/feedback', arguments: authController.userEmail.value);
-      },
-      backgroundColor: AppColors.primaryBlue, // <-- MODIFIED
-      child: const Icon(Icons.message_rounded,
-          color: AppColors.cardBackground), // <-- MODIFIED
-      tooltip: 'Feedback',
-      elevation: 4.0,
+// New helper method for the logout confirmation dialog
+  void _showLogoutDialog(BuildContext context, AuthController authController) {
+    Get.defaultDialog(
+      title: 'logout'.tr,
+      titleStyle: GoogleFonts.suwannaphum(
+        fontWeight: FontWeight.bold,
+        color: AppColors.darkText,
+      ),
+      contentPadding: const EdgeInsets.all(20),
+      middleText: 'areYouSureLogout'.tr,
+      middleTextStyle: GoogleFonts.suwannaphum(
+        color: AppColors.mediumText,
+        fontSize: 16,
+      ),
+      backgroundColor: AppColors.cardBackground,
+      radius: 12,
+      confirm: ElevatedButton(
+        onPressed: () {
+          Get.back(); // Close the dialog
+          authController.logout();
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.declineRed,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+        ),
+        child: Text(
+          'yes'.tr,
+          style: GoogleFonts.suwannaphum(fontWeight: FontWeight.bold),
+        ),
+      ),
+      cancel: TextButton(
+        onPressed: () => Get.back(),
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.mediumText,
+        ),
+        child: Text(
+          'no'.tr,
+          style: GoogleFonts.suwannaphum(fontWeight: FontWeight.bold),
+        ),
+      ),
     );
   }
 
-  Widget buildBottomNavBar(BuildContext context) {
+
+  
+
+  Widget _buildFeedbackButton(BuildContext context) {
+    return IconButton(
+      onPressed: () {
+        Get.toNamed('/feedback', arguments: authController.userEmail.value);
+      },
+      icon: const Icon(Icons.message_rounded, color: AppColors.cardBackground),
+    );
+  }
+
+  Widget _buildBottomNavBar(BuildContext context) {
     return Obx(() {
       final student = studentController.student.value;
       return BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.cardBackground, // <-- MODIFIED
-        selectedItemColor: AppColors.primaryBlue, // <-- MODIFIED
-        unselectedItemColor: AppColors.mediumText, // <-- MODIFIED
+        backgroundColor: AppColors.cardBackground,
+        selectedItemColor: AppColors.primaryBlue,
+        unselectedItemColor: AppColors.mediumText,
         showUnselectedLabels: true,
         currentIndex: 0,
         selectedLabelStyle: GoogleFonts.suwannaphum(fontSize: 12),
@@ -584,7 +625,7 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         items: [
           BottomNavigationBarItem(
-            icon: const Icon(Icons.home),
+            icon: const Icon(Icons.home_rounded),
             label: "home".tr,
           ),
           BottomNavigationBarItem(
@@ -594,7 +635,7 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: CircleAvatar(
               radius: 14,
-              backgroundImage: (student?.image?.isNotEmpty ?? false)
+              backgroundImage: student?.image?.isNotEmpty ?? false
                   ? NetworkImage(student!.image!)
                   : const AssetImage('assets/profile.jpg') as ImageProvider,
             ),

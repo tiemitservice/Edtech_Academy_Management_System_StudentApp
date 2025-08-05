@@ -1,7 +1,7 @@
 import 'package:edtechschool/allScreen/attendent.dart';
 import 'package:edtechschool/controller/auth_controller.dart';
 import 'package:edtechschool/controller/class_controller.dart';
-import 'package:edtechschool/controller/language_controller.dart'; // Import Language Controller
+import 'package:edtechschool/controller/language_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -19,16 +19,17 @@ import 'service/lang_service.dart';
 import 'package:get_storage/get_storage.dart';
 import 'allScreen/homescreen.dart';
 import 'allScreen/class.dart';
+import 'utils/app_colors.dart'; // Import AppColors
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await GetStorage.init();
   Get.put(AuthController());
-  Get.put(StudentController(GetStorage().read('userEmail') ?? ''));
+  Get.put(StudentController());
   Get.put(PermissionController());
   Get.put(ClassController());
-  Get.put(LanguageController()); // Add the language controller**
+  Get.put(LanguageController());
 
   runApp(MyApp());
 }
@@ -36,20 +37,76 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final bool isEnglish = GetStorage().read('isEnglish') ?? true;
+    final Locale initialLocale =
+        isEnglish ? const Locale('en') : const Locale('km');
+
     return GetMaterialApp(
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        // Set the default font family for the entire app
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primaryBlue,
+          primary: AppColors.primaryBlue,
+          onPrimary: AppColors.onPrimary,
+          background: AppColors.lightBackground,
+          onBackground: AppColors.darkText,
+          error: AppColors.declineRed,
+          surface: AppColors.cardBackground,
+        ),
         textTheme: GoogleFonts.suwannaphumTextTheme(
           Theme.of(context).textTheme,
+        ),
+        scaffoldBackgroundColor: AppColors.lightBackground,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.primaryBlue,
+          foregroundColor: AppColors.onPrimary,
+          iconTheme: IconThemeData(color: AppColors.onPrimary),
+          centerTitle: true,
+          elevation: 0,
+        ),
+        buttonTheme: const ButtonThemeData(
+          buttonColor: AppColors.primaryBlue,
+          textTheme: ButtonTextTheme.primary,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryBlue,
+            foregroundColor: AppColors.onPrimary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            textStyle: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        cardTheme: CardTheme(
+          color: AppColors.cardBackground,
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: AppColors.lightBackground,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.borderGrey),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide:
+                const BorderSide(color: AppColors.primaryBlue, width: 2),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.borderGrey),
+          ),
+          labelStyle: const TextStyle(color: AppColors.mediumText),
+          hintStyle: const TextStyle(color: AppColors.mediumText),
         ),
       ),
       debugShowCheckedModeBanner: false,
       translations: LangService(),
-      // Read the saved language. Default to English ('en') if nothing is saved.
-      locale: GetStorage().read('isEnglish') ?? true
-          ? const Locale('en')
-          : const Locale('km'),
+      locale: initialLocale,
       fallbackLocale: const Locale('en'),
       initialRoute: '/splash',
       getPages: [
@@ -60,36 +117,32 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/history_permission', page: () => HistoryPermission()),
         GetPage(
           name: '/permission_status',
-          page: () => const Permission_Status(email: '',),
+          page: () => const Permission_Status(email: ''),
         ),
-        //page have connection with email
         GetPage(
             name: '/home_page',
             page: () => HomeScreen(
-                  email: '',
+                  email: Get.arguments is String ? Get.arguments as String : '',
                 )),
         GetPage(
             name: '/profile',
             page: () => ProfilePage(
-                  email: '',
+                  email: Get.arguments is String ? Get.arguments as String : '',
                 )),
         GetPage(
             name: '/class',
             page: () => ClassScreen(
-                  email: '',
+                  email: Get.arguments is String ? Get.arguments as String : '',
                 )),
         GetPage(
             name: '/permission',
             page: () => Permission(
-                  email: '',
+                  email: Get.arguments is String ? Get.arguments as String : '',
                 )),
-
         GetPage(
           name: '/feedback',
-          page: () {
-            final email = Get.arguments as String;
-            return FeedbackScreen(email: email);
-          },
+          page: () => FeedbackScreen(
+              email: Get.arguments is String ? Get.arguments as String : ''),
         ),
       ],
     );

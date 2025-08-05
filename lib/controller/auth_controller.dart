@@ -5,11 +5,15 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthController extends GetxController {
+  // Existing properties
   var isLoading = false.obs;
   var userEmail = ''.obs;
   var userName = ''.obs;
   var authToken = ''.obs;
   var studentId = ''.obs;
+
+  // New properties for password visibility
+  var isPasswordVisible = false.obs;
 
   final _storage = const FlutterSecureStorage();
 
@@ -22,23 +26,27 @@ class AuthController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _tryAutoLogin(); // Check for a saved session when the controller is initialized
+    _tryAutoLogin();
   }
 
   /// Tries to load user data from secure storage to auto-login the user.
   Future<void> _tryAutoLogin() async {
     final token = await _storage.read(key: _authTokenKey);
     if (token == null) {
-      return; // No saved token, do nothing.
+      return;
     }
 
-    // If a token exists, load all user data from secure storage.
     authToken.value = token;
     studentId.value = await _storage.read(key: _studentIdKey) ?? '';
     userName.value = await _storage.read(key: _userNameKey) ?? '';
     userEmail.value = await _storage.read(key: _userEmailKey) ?? '';
 
     print('Secure auto-login successful for user: ${userName.value}');
+  }
+
+  /// New method to toggle password visibility
+  void togglePasswordVisibility() {
+    isPasswordVisible.value = !isPasswordVisible.value;
   }
 
   /// Handles user login, saves session data, and returns true on success.
@@ -104,6 +112,7 @@ class AuthController extends GetxController {
 
   /// Logs out the user, clears all data, and navigates to the login screen.
   Future<void> logout() async {
+    
     // Clear state variables
     authToken.value = '';
     userEmail.value = '';
@@ -115,7 +124,6 @@ class AuthController extends GetxController {
 
     print('User logged out and session data cleared.');
 
-    // **REFINEMENT:** Navigate user back to the login screen after logout.
     Get.offAllNamed('/');
   }
 

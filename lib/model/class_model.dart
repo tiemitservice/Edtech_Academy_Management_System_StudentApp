@@ -1,3 +1,5 @@
+// Assuming you have a Student model class defined elsewhere
+// based on your previous examples.
 
 class ClassModel {
   final String id;
@@ -12,7 +14,6 @@ class ClassModel {
     required this.students,
     required this.staff,
     this.markAsCompleted = false,
-
   });
 
   factory ClassModel.fromJson(Map<String, dynamic> json) {
@@ -23,11 +24,12 @@ class ClassModel {
           .map((e) => StudentRecord.fromJson(e))
           .toList(),
       staff: json['staff'] ?? '',
-       markAsCompleted: json['mark_as_completed'] ?? false,
+      markAsCompleted: json['mark_as_completed'] ?? false,
     );
   }
-int get totalStudent => students.length;
-  
+
+  int get totalStudent => students.length;
+
   @override
   String toString() {
     return 'ClassModel(id: $id, name: $name, staff: $staff, students: ${students.length})';
@@ -36,41 +38,46 @@ int get totalStudent => students.length;
 
 class StudentRecord {
   final Student student;
-  final String comment;
-  final String? totalScore;
-  final int score;
-  final int attendance;
-  final int totalAttendanceScore;
-  final int finalScore;
-  final int midtermScore;
-  final int quizScore;
+  final String? comments;
+  final int attendanceScore;
+  final int classPractice;
+  final int homeWork;
+  final int assignmentScore;
+  final int presentation;
+  final int revisionTest;
+  final int finalExam;
+  final int totalScore;
+  final int workBook;
 
   StudentRecord({
     required this.student,
-    required this.comment,
-    this.totalScore,
-    this.score = 0,
-    this.attendance = 0,
-    this.totalAttendanceScore = 0,
-    this.finalScore = 0,
-    this.midtermScore = 0,
-    this.quizScore = 0,
+    this.comments,
+    this.attendanceScore = 0,
+    this.classPractice = 0,
+    this.homeWork = 0,
+    this.assignmentScore = 0,
+    this.presentation = 0,
+    this.revisionTest = 0,
+    this.finalExam = 0,
+    this.totalScore = 0,
+    this.workBook = 0,
   });
 
   factory StudentRecord.fromJson(Map<String, dynamic> json) {
     return StudentRecord(
       student: Student.fromJson(json['student']),
-      comment: json['comments'] ?? '',
-      score: json['score'] ?? 0,
-      attendance: json['attendence'] ?? 0,
-      totalAttendanceScore: json['total_attendance_score'] ?? 0,
-      finalScore: json['final_score'] ?? 0,
-      midtermScore: json['midterm_score'] ?? 0,
-      quizScore: json['quiz_score'] ?? 0,
+      comments: json['comments'],
+      attendanceScore: json['attendance_score'] ?? 0,
+      classPractice: json['class_practice'] ?? 0,
+      homeWork: json['home_work'] ?? 0,
+      assignmentScore: json['assignment_score'] ?? 0,
+      presentation: json['presentation'] ?? 0,
+      revisionTest: json['revision_test'] ?? 0,
+      finalExam: json['final_exam'] ?? 0,
+      totalScore: json['total_score'] ?? 0,
+      workBook: json['work_book'] ?? 0,
     );
   }
-
-  get total_score => null;
 }
 
 class Student {
@@ -81,6 +88,7 @@ class Student {
   final String gender;
   final String image;
   final String phoneNumber;
+
   Student({
     required this.id,
     required this.khName,
@@ -101,6 +109,5 @@ class Student {
       image: json['image'] ?? '',
       phoneNumber: json['phoneNumber'] ?? '',
     );
-  }  
+  }
 }
-

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import '../controller/auth_controller.dart';
+import 'package:edtechschool/utils/app_colors.dart';
 
 class SplashAnimation extends StatefulWidget {
   const SplashAnimation({super.key});
@@ -21,7 +22,7 @@ class _SplashAnimationState extends State<SplashAnimation>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 2), // Reduced duration for faster UX
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -30,27 +31,19 @@ class _SplashAnimationState extends State<SplashAnimation>
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        _checkAuthAndNavigate();
+        // Use a slight delay before navigating to give a sense of completion
+        Future.delayed(const Duration(milliseconds: 500), () {
+          final authController = Get.find<AuthController>();
+          if (authController.authToken.isNotEmpty) {
+            Get.offNamed('/home_page');
+          } else {
+            Get.offNamed('/');
+          }
+        });
       }
     });
 
     _controller.forward();
-  }
-
-  // This is where the token is read from storage
-  Future<void> _checkAuthAndNavigate() async {
-    const storage = FlutterSecureStorage();
-    final token = await storage.read(key: 'authToken');
-
-    if (!mounted) return;
-
-    if (token != null) {
-      // If token exists, go to home
-      Get.offNamed('/home_page');
-    } else {
-      // If no token, go to login
-      Get.offNamed('/');
-    }
   }
 
   @override
@@ -62,6 +55,7 @@ class _SplashAnimationState extends State<SplashAnimation>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.cardBackground,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Center(
@@ -70,16 +64,16 @@ class _SplashAnimationState extends State<SplashAnimation>
             children: [
               const Spacer(flex: 2),
               SvgPicture.asset(
-                'assets/logoEn.svg', // Make sure this asset exists
+                'assets/logoEn.svg',
                 height: 158,
               ),
               const SizedBox(height: 130),
-              const Text(
-                'FOR PARENTS',
-                style: TextStyle(
+              Text(
+                'FOR PARENTS'.tr, // Use translation key for consistency
+                style: const TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w900,
-                  color: Color.fromRGBO(20, 105, 199, 1.0),
+                  color: AppColors.primaryBlue,
                 ),
               ),
               const Spacer(flex: 1),
@@ -87,11 +81,10 @@ class _SplashAnimationState extends State<SplashAnimation>
                 padding: const EdgeInsets.only(bottom: 30),
                 child: Column(
                   children: [
-                    const Text('from',
-                        style: TextStyle(
-                            color: Color.fromARGB(255, 108, 108, 108))),
+                    Text('from'.tr, // Use translation key
+                        style: const TextStyle(color: AppColors.mediumText)),
                     SvgPicture.asset(
-                      'assets/tiem_logo.svg', // Make sure this asset exists
+                      'assets/tiem_logo.svg',
                       height: 27,
                       width: 70,
                     ),
